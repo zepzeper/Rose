@@ -1,0 +1,23 @@
+{
+    "name": "rose/framework",
+    "description": "The Rose Framework",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "wouterschiedam",
+            "email": "79146984+wouterschiedam@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "monolog/monolog": "^3.8",
+        "symfony/http-foundation": "^7.2",
+        "nesbot/carbon": "^3.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rose\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
