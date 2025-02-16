@@ -2,36 +2,51 @@
 
 namespace Rose\Roots;
 
-class Application
+use Composer\Autoload\ClassLoader;
+use Rose\Container\Container;
+use Rose\Container\ServiceContainer;
+use Rose\Contracts\Roots\Application as ApplicationContract;
+use Rose\Events\EventServiceProvider;
+use Rose\Roots\Bootstrap\RegisterProviders;
+use Rose\Roots\Configuration\ApplicationBuilder;
+use Rose\Session\SessionServiceProvider;
+use Rose\Support\Album\Collection;
+use Whoops\Handler\PrettyPageHandler;
+use Whoops\Run;
+
+use function Rose\Support\Album\data_get;
+use function Rose\System\join_paths;
+
+class Application extends Container implements ApplicationContract
 {
+    const VERSION = '0.1.alpha';
 
-    protected bool $booted = false;
+    protected string $appPath;
     protected string $basePath;
+    protected string $bootstrapPath;
+    protected array $configurationFiles = [];
+    protected array $environmentVariables = [];
+    protected ServiceContainer $container;
+    protected array $serviceProviders = [];
+    private bool $hasBeenBootstrapped = false;
 
-    /**
-     * The classes it uses to bootsrap the application.
-     *
-     * @var string[]
-     */
-    protected $bootstapClasses = [
-        \Rose\Roots\Bootstrap\BootProvider::class
-    ];
+    private bool $booted = false;
 
-    /**
-     * Create a new Rose application instance.
-     *
-     * @param  string|null  $basePath
-     * @return void
-     */
-    public function __construct($basePath = null)
+    // Region: Core Application Setup
+    public function __construct(?string $basePath = null)
     {
-        if ($basePath) {
-            //$this->setBasePath($basePath);
+        if ($basePath)
+        {
+            $this->setBasePath($basePath ?? self::inferBasePath());
         }
+
+        $this->registerBaseBindings();
+        $this->registerBaseServiceProviders();
+        $this->registerCoreContainerAliases();
     }
 
     /**
-     * Boot the App and Services.
+     * Boot the application's service providers.
      *
      * @return void
      */
@@ -40,31 +55,303 @@ class Application
         if ($this->isBooted()) {
             return;
         }
-        
+
+        array_walk(
+            $this->serviceProviders, function ($q) {
+                $this->bootProvider($q);
+            }
+        );
+
         $this->booted = true;
     }
 
-    /**
-     * Check wether the App is already booted or not
-     * 
-     * @return bool
-     */
-    private function isBooted()
+    public function isBooted()
     {
         return $this->booted;
     }
 
-    public function getInstance($type, $request)
+    public static function configure(?string $basePath = null): ApplicationBuilder
     {
-
-
+        return (new ApplicationBuilder(new static($basePath ?? self::inferBasePath())))
+                ->withKernels()
+                ->withProviders();
     }
 
-    public function setBasePath($basePath)
+    /**
+     * Determine if the application has been bootstrapped before.
+     *
+     * @return bool
+     */
+    public function hasBeenBootstrapped()
+    {
+        return $this->hasBeenBootstrapped;
+    }
+
+    /**
+     * Run the given array of bootstrap classes.
+     *
+     * @param  array  $bootstrappers
+     * @return void
+     */
+    public function bootstrapWith($bootstrappers)
+    {
+        $this->hasBeenBootstrapped = true;
+
+        foreach ($bootstrappers as $bootstrapper) {
+            $this['events']->dispatch('boostrapping: ' . $bootstrapper, [$this]);
+
+            $this->make($bootstrapper)->bootstrap($this);
+
+            $this['events']->dispatch('bootsrapped: ' . $bootstrapper, [$this]);
+        }
+    }
+
+    // Region: Path Management
+    public function setBasePath(string $basePath): self
     {
         $this->basePath = rtrim($basePath, '\/');
+
+        $this->bindPathsInContainer();
 
         return $this;
     }
 
+    protected function bindPathsInContainer(): void
+    {
+        $this->set('path.base', $this->basePath());
+        $this->set('path.config', $this->configPath());
+        $this->set('path.database', $this->databasePath());
+        $this->set('path.storage', $this->storagePath());
+
+        $this->useBootstrapPath($this->basePath('bootstrap'));
+    }
+
+
+    /**
+     * Get the base path of the installation.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function basePath($path = '')
+    {
+        return $this->joinPaths($this->basePath, $path);
+    }
+
+    /**
+     * Get the path to the application configuration files.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function configPath($path = '')
+    {
+        return $this->joinPaths($this->basePath, 'config' . ($path ? DIRECTORY_SEPARATOR . $path : ''));
+    }
+
+    /**
+     * Get the path to the database directory.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function databasePath($path = '')
+    {
+        return $this->joinPaths($this->basePath, 'database' . ($path ? DIRECTORY_SEPARATOR . $path : ''));
+    }
+
+    /**
+     * Get the path to the storage directory.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function storagePath($path = '')
+    {
+        return $this->joinPaths($this->basePath, 'storage' . ($path ? DIRECTORY_SEPARATOR . $path : ''));
+    }
+
+    /**
+     * Get the path to the bootstrap directory.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function bootstrapPath($path = '')
+    {
+        return $this->joinPaths($this->bootstrapPath, $path);
+    }
+
+    public function getBootstrapProvidersPath()
+    {
+        return $this->bootstrapPath('providers.php');
+    }
+
+    public function useBootstrapPath(string $path): self
+    {
+        $this->bootstrapPath = $path;
+        return $this;
+    }
+
+    // Region: Service Providers
+    
+    /**
+     * Register all of the configured providers.
+     *
+     * @return void
+     */
+    public function registerConfiguredProviders()
+    {
+        $providers = (new Collection($this->make('config')->get('app.providers')))
+            ->partition(fn ($provider) => str_starts_with($provider, 'Rose\\'));
+
+        (new ProviderRepository($this, new FileSystem, null))
+            ->load($providers->collapse()->toArray());
+    }
+
+    protected function registerBaseServiceProviders(): void
+    {
+        $this->register(new EventServiceProvider($this));
+        $this->registerEnvHandler();
+        $this->registerErrorHandler();
+    }
+
+    protected function registerEnvHandler()
+    {
+        // Create and configure the Dotenv instance
+        $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__.'/../../');
+    
+        // Load environment variables immediately
+        $this->environmentVariables =  $dotenv->load();
+    }
+
+    protected function registerErrorHandler(): void
+    {
+        if ($this->environment('production')) {
+            return;
+        }
+
+        (new Run())->pushHandler(new PrettyPageHandler());
+    }
+
+    /**
+     * Register a service provider with the application.
+     *
+     * @param  \Rose\Support\ServiceProvider|string  $provider
+     * @param  bool  $force
+     * @return \Rose\Support\ServiceProvider
+     */
+    public function register($provider, $force = false)
+    {
+        if (is_string($provider)) {
+            $provider = $this->resolveProvider($provider);
+        }
+
+        if (method_exists($provider, 'register')) {
+            $provider->register();
+        }
+
+        $this->serviceProviders[] = $provider;
+    }
+
+    // Region: Configuration
+    public function setConfigPath(string $path): self
+    {
+        if (!is_dir($path)) {
+            throw new \RuntimeException("Configuration path [{$path}] does not exist");
+        }
+
+        foreach (glob("{$path}/*.php") as $configFile) {
+            $this->configurationFiles[basename($configFile, '.php')] = include $configFile;
+        }
+
+        return $this;
+    }
+
+    public function configuration(string $key = null, mixed $default = null): mixed
+    {
+        if (is_null($key)) {
+            return $this->configurationFiles;
+        }
+
+        return data_get($this->configurationFiles, $key, $default);
+    }
+
+    // Region: Environment Management
+    /**
+     * Get or check the current application environment.
+     *
+     * @param  string|array  ...$environments
+     * @return string|bool
+     */
+    public function environment(...$environments)
+    {
+        if (is_array($environments)) {
+            return in_array($this->environmentVariables['APP_ENV'] ?? null, $environments);
+        }
+
+        return $this->environmentVariables['APP_ENV'] === $environments;
+    }
+
+    // Region: Utilities
+    public static function inferBasePath(): string
+    {
+        return $_ENV['APP_BASE_PATH'] ?? dirname(
+            array_values(
+                array_filter(
+                    array_keys(ClassLoader::getRegisteredLoaders()),
+                    fn($path) => !str_contains($path, '/vendor/')
+                )
+            )[0]
+        );
+    }
+
+    public function joinPaths(string $basePath, string $path = ''): string
+    {
+        return join_paths($basePath, $path);
+    }
+
+    // Region: Internal Helpers
+    protected function registerBaseBindings(): void
+    {
+        static::setInstance($this);
+        $this->set('app', $this);
+        $this->set(Container::class, $this);
+    }
+
+    protected function registerCoreContainerAliases(): void
+    {
+        $aliases = [
+            'app' => [self::class, Container::class, Application::class],
+            'events' => [\Rose\Events\Dispatcher::class, \Rose\Contracts\Events\Dispatcher::class],
+            'session' => [\Rose\Session\Manager\SessionManager::class],
+        ];
+
+        foreach ($aliases as $key => $targets) {
+            foreach ($targets as $alias) {
+                $this->alias($key, $alias);
+            }
+        }
+    }
+
+    /**
+     * Resolve a service provider instance from the class name.
+     *
+     * @param  string  $provider
+     * @return \Rose\Support\ServiceProvider
+     */
+    public function resolveProvider($provider)
+    {
+        return new $provider($this);
+    }
+
+    /**
+     * Get the version number of the application.
+     *
+     * @return string
+     */
+    public function version()
+    {
+        return VERSION;
+    }
 }

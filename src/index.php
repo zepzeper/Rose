@@ -1,11 +1,19 @@
 <?php
 
+namespace Rose;
+
+use Rose\Contracts\Http\Kernel;
+use Rose\Roots\Application;
+
 // Include the Composer autoloader
 require __DIR__ . '/../vendor/autoload.php';
 
-use Rose\Roots\Application;
-use Rose\Roots\Bootstrap\BootProvider as Bootstrap;
+$app = Application::configure()
+    ->withProviders([
+            \Rose\Session\SessionServiceProvider::class
+    ])
+    ->create();
 
-$app = new Application();
+$app->make(Kernel::class);
 
-(new Bootstrap())->Bootstrap($app);
+dd($app);

@@ -2,98 +2,58 @@
 
 namespace Rose\Routing;
 
-class Router
+use Closure;
+use Rose\Contracts\Routing\Register;
+
+class Router implements Register
 {
 
-    protected $routes;
-    protected $events;
+    protected array $routes = [];
+    protected array $params = [];
 
-    public function __construct(Dispatcher $events, ?Container $container = null)
-    {
-        $this->events = $events;
-        $this->routes = new RouteCollection;
-    }
+    protected string $controllerSuffix = 'Controller';
+    private string $actionSuffix = 'Action';
 
-    /**
-     * Register a new GET route with the router.
-     *
-     * @param  string $uri
-     * @param  array|string|callable|null $action
-     * @return \Illuminate\Routing\Route
-     */
-    public function get($uri, $action = null)
-    {
-        return $this->addRoute(['GET', 'HEAD'], $uri, $action);
-    }
+    protected string $namespace = 'Rose\Http\Controller\\';
 
     /**
-     * Register a new POST route with the router.
-     *
-     * @param  string                     $uri
-     * @param  array|string|callable|null $action
-     * @return \Illuminate\Routing\Route
-     */
-    public function post($uri, $action = null)
+    *
+    * @param string $route
+    * @param array $params
+    * @param Closure|string|null $callback
+    *
+    * @return void
+    */
+    public function add($route, $params = [], $callback = null)
     {
-        return $this->addRoute('POST', $uri, $action);
+        if ($callback !== null) {
+            return $callback($params);
+        }
+
+        // Convert the route to a regular expression: escape forward slashes
+        $route = preg_replace('/\//', '\\/', $route);
+        // Convert variables e.g. {controller}
+        $route = preg_replace('/\{([a-z]+)\}/', '(?P<\1>[a-z-]+)', $route);
+        // Convert variables with custom regular expressions e.g. {id:\d+}
+        $route = preg_replace('/\{([a-z]+):([^\}]+)\}/', '(?P<\1>\2)', $route);
+        // Add start and end delimiters, and case insensitive flag
+        $route = '/^' . $route . '$/i';
+
+        $this->routes[$route] = $params;
     }
 
-    /**
-     * Register a new PUT route with the router.
-     *
-     * @param  string                     $uri
-     * @param  array|string|callable|null $action
-     * @return \Illuminate\Routing\Route
-     */
-    public function put($uri, $action = null)
+    public function dispatch(string $url) 
     {
-        return $this->addRoute('PUT', $uri, $action);
+            
     }
 
-    /**
-     * Register a new PATCH route with the router.
-     *
-     * @param  string                     $uri
-     * @param  array|string|callable|null $action
-     * @return \Illuminate\Routing\Route
-     */
-    public function patch($uri, $action = null)
+    public function getParams(): array 
     {
-        return $this->addRoute('PATCH', $uri, $action);
+        return $this->params;
     }
 
-    /**
-     * Register a new DELETE route with the router.
-     *
-     * @param  string                     $uri
-     * @param  array|string|callable|null $action
-     * @return \Illuminate\Routing\Route
-     */
-    public function delete($uri, $action = null)
+    public function getRoutes(): array 
     {
-        return $this->addRoute('DELETE', $uri, $action);
+        return $this->routes;
     }
-
-    /**
-     * Add a route to the underlying route collection.
-     *
-     * @param  array|string  $methods
-     * @param  string  $uri
-     * @param  array|string|callable|null  $action
-     * @return \Illuminate\Routing\Route
-     */
-    public function addRoute($methods, $uri, $action)
-    {
-        return $this->routes->add($this->createRoute($methods, $uri, $action));
-    }
-
-     /**
-     * @param  array|string  $methods
-     * @param  string  $uri
-     * @param  array|string|callable|null  $action
-     */
-    protected function createRoute($methods, $uri, $action) {
-
-    }
-    
 }

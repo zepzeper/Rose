@@ -28,7 +28,7 @@ interface Kernel
      * @param Request $request 
      * @return Response 
      */
-    public function emit(Request $request): Response;
+    /*public function emit(Request $request): Response;*/
 
 
 

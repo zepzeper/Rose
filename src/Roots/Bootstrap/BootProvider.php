@@ -6,7 +6,7 @@ use Rose\Roots\Application;
 
 class BootProvider
 {
-    public function Bootstrap(Application $app)
+    public function bootstrap(Application $app)
     {
         $app->boot();
     }
