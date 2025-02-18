@@ -4,13 +4,12 @@ namespace Rose\Contracts\Session\Storage;
 
 interface Storage
 {
-
     public function setSessionName(string $sessionName): void;
 
     public function getSessionName(): string;
 
     public function setSessionID(string $sessionID): void;
-    
+
     public function getSessionID(): string;
 
     public function setSession(string $key, $value);

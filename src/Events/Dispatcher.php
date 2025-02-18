@@ -11,19 +11,19 @@ use ReflectionMethod;
 class Dispatcher implements DispatcherContract
 {
     protected ContainerContract $container;
-    
+
     /**
      * Registered event listeners
      * Structure: ['eventName' => [listener1, listener2]]
      */
     protected array $listeners = [];
-    
+
     /**
      * Wildcard event listeners
      * Structure: ['event.*' => [listener1, listener2]]
      */
     protected array $wildcards = [];
-    
+
     /**
      * Sorted event listeners by priority
      */
@@ -45,25 +45,25 @@ class Dispatcher implements DispatcherContract
     {
         // Check for method name typo (dispath -> dispatch)
         [$isObject, $eventName, $payload] = $this->parseEventPayload($event, $payload);
-        
+
         $responses = [];
-        
+
         foreach ($this->getListeners($eventName) as $listener) {
             $response = $this->callListener($listener, $event, $payload);
-            
+
             // If halt is requested and response is not null, return first response
             if ($halt && !is_null($response)) {
                 return $response;
             }
-            
+
             // If response is false, stop propagation
             if ($response === false) {
                 break;
             }
-            
+
             $responses[] = $response;
         }
-        
+
         return $halt ? null : $responses;
     }
 
@@ -81,7 +81,7 @@ class Dispatcher implements DispatcherContract
             // Register closure as wildcard listener
             return $this->listen('*', $events);
         }
-        
+
         foreach ((array) $events as $event) {
             // Separate wildcards from normal events
             if (str_contains($event, '*')) {
@@ -107,14 +107,14 @@ class Dispatcher implements DispatcherContract
     public function subscribe($subscriber)
     {
         $subscriber = $this->resolveSubscriber($subscriber);
-        
+
         $methods = (new ReflectionClass($subscriber))->getMethods(ReflectionMethod::IS_PUBLIC);
-        
+
         foreach ($methods as $method) {
             if ($method->isStatic() || $method->isAbstract()) {
                 continue;
             }
-            
+
             $this->listen(
                 $this->getEventNameFromMethod($subscriber, $method),
                 [$subscriber, $method->getName()]
@@ -139,7 +139,7 @@ class Dispatcher implements DispatcherContract
         if (is_object($event)) {
             return [true, get_class($event), [$event]];
         }
-        
+
         return [false, $event, Arr::wrap($payload)];
     }
 
@@ -149,13 +149,13 @@ class Dispatcher implements DispatcherContract
     private function getListeners(string $eventName): array
     {
         $listeners = $this->listeners[$eventName] ?? [];
-        
+
         foreach ($this->wildcards as $wildcard => $wildcardListeners) {
             if (Str::is($wildcard, $eventName)) {
                 $listeners = array_merge($listeners, $wildcardListeners);
             }
         }
-        
+
         return $this->sortListeners($eventName, $listeners);
     }
 
@@ -168,10 +168,10 @@ class Dispatcher implements DispatcherContract
             usort($listeners, function ($a, $b) {
                 return $this->getListenerPriority($a) <=> $this->getListenerPriority($b);
             });
-            
+
             $this->sorted[$event] = $listeners;
         }
-        
+
         return $this->sorted[$event];
     }
 
@@ -184,21 +184,21 @@ class Dispatcher implements DispatcherContract
         if ($listener instanceof Closure) {
             return $this->container->call($listener, compact('event', 'payload'));
         }
-        
+
         // If listener is an array [class, method]
         if (is_array($listener)) {
             [$class, $method] = $listener;
             $instance = $this->container->make($class);
-            
+
             return $this->container->call([$instance, $method], compact('event', 'payload'));
         }
-        
+
         // If listener is a string class name
         if (is_string($listener)) {
             $instance = $this->container->make($listener);
             return $this->container->call($instance, compact('event', 'payload'));
         }
-        
+
         throw new InvalidArgumentException('Invalid listener type');
     }
 
@@ -210,23 +210,23 @@ class Dispatcher implements DispatcherContract
         if (is_string($subscriber)) {
             return $this->container->make($subscriber);
         }
-        
+
         return $subscriber;
     }
 
     /**
      * Get event name from subscriber method
-     * Conventions: 
+     * Conventions:
      * - onOrderCreated listens for OrderCreated
      * - handleOrderUpdated listens for OrderUpdated
      */
     private function getEventNameFromMethod($subscriber, ReflectionMethod $method): string
     {
         $methodName = $method->getName();
-        
+
         // Remove "on" or "handle" prefix
         $event = preg_replace('/^(on|handle)/', '', $methodName);
-        
+
         // Convert PascalCase to dotted notation (optional)
         return strtolower(preg_replace('/(?<!^)[A-Z]/', '.$0', $event));
     }

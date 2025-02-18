@@ -319,8 +319,7 @@ class Container implements ContainerContract, ArrayAccess
 
         $needsContextBuild = ! empty($parameters) || ! is_null($concrete);
 
-        if (isset($this->instance[$abstract]) && ! $needsContextBuild)
-        {
+        if (isset($this->instance[$abstract]) && ! $needsContextBuild) {
             return $this->instance[$abstract];
         }
 
@@ -372,7 +371,7 @@ class Container implements ContainerContract, ArrayAccess
             return $this->bindings[$abstract]['concrete'];
         }
 
-         return $abstract;
+        return $abstract;
     }
     /**
      * @param mixed $concrete
@@ -586,7 +585,7 @@ class Container implements ContainerContract, ArrayAccess
      */
     public function offsetSet($offset, $value): void
     {
-        $this->bind($offset, $value instanceof Closure ? $value : fn() => $value);
+        $this->bind($offset, $value instanceof Closure ? $value : fn () => $value);
     }
 
     /**

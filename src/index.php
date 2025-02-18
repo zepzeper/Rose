@@ -8,7 +8,6 @@ use Rose\Roots\Application;
 require __DIR__ . '/../vendor/autoload.php';
 
 $app = Application::configure()
-    ->withProviders()
     ->create();
 
 $app->make(\Rose\Roots\Http\Kernel::class);

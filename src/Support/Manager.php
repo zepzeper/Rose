@@ -12,7 +12,8 @@ abstract class Manager
 
     protected array $drivers = [];
 
-    public function __construct(Container $container) {
+    public function __construct(Container $container)
+    {
         $this->container = $container;
 
         /*$this->config = $container->make('config');*/
@@ -48,7 +49,7 @@ abstract class Manager
         return $this;
     }
 
-    public function __cal($method, $params)
+    public function __call($method, $params)
     {
         return $this->driver()->$method(...$params);
     }

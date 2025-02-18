@@ -6,7 +6,6 @@ use Rose\Support\Album\Arr;
 
 class Repository
 {
-
     protected $items = [];
 
     /**

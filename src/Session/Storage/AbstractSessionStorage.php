@@ -6,7 +6,6 @@ use Rose\Contracts\Session\Storage\Storage as StorageContract;
 
 abstract class AbstractSessionStorage implements StorageContract
 {
-
     protected array $options = [];
 
     public function __construct(array $options = [])

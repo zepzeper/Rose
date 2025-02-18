@@ -7,7 +7,6 @@ use Rose\Contracts\Routing\Register;
 
 class Router implements Register
 {
-
     protected array $routes = [];
     protected array $params = [];
 
@@ -42,17 +41,17 @@ class Router implements Register
         $this->routes[$route] = $params;
     }
 
-    public function dispatch(string $url) 
+    public function dispatch(string $url)
     {
-            
+
     }
 
-    public function getParams(): array 
+    public function getParams(): array
     {
         return $this->params;
     }
 
-    public function getRoutes(): array 
+    public function getRoutes(): array
     {
         return $this->routes;
     }

@@ -18,7 +18,7 @@ use Whoops\Run;
 
 class Application extends Container implements ApplicationContract
 {
-    const VERSION = '0.1.alpha';
+    public const VERSION = '0.1.alpha';
 
     protected string $appPath;
 
@@ -63,8 +63,11 @@ class Application extends Container implements ApplicationContract
             return;
         }
 
+        dd($this);
+
         array_walk(
-            $this->serviceProviders, function ($q) {
+            $this->serviceProviders,
+            function ($q) {
                 $this->bootProvider($q);
             }
         );
@@ -74,8 +77,7 @@ class Application extends Container implements ApplicationContract
 
     protected function bootProvider(ServiceProvider $provider)
     {
-        if (method_exists($provider, 'boot'))
-        {
+        if (method_exists($provider, 'boot')) {
             $this->call([$provider, 'boot']);
         }
 
@@ -210,7 +212,7 @@ class Application extends Container implements ApplicationContract
     }
 
     // Region: Service Providers
-    
+
     /**
      * Register all of the configured providers.
      *
@@ -221,9 +223,9 @@ class Application extends Container implements ApplicationContract
         $providers = (new Collection($this->make('config')->get('app.providers')))
             ->partition(fn ($provider) => str_starts_with($provider, 'Rose\\'));
 
-        // SessionServiceProvider not being registered cause $provider only contain Application
+        // TODO: SessionServiceProvider not being registered cause $provider only contain Application
 
-        (new ProviderRepository($this, new FileSystem, ''))
+        (new ProviderRepository($this, new FileSystem(), ''))
             ->load($providers->flatten()->toArray());
     }
 
@@ -309,7 +311,7 @@ class Application extends Container implements ApplicationContract
             array_values(
                 array_filter(
                     array_keys(ClassLoader::getRegisteredLoaders()),
-                    fn($path) => !str_contains($path, '/vendor/')
+                    fn ($path) => !str_contains($path, '/vendor/')
                 )
             )[0]
         );

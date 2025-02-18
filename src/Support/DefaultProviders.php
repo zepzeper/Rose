@@ -4,15 +4,15 @@ namespace Rose\Support;
 
 class DefaultProviders
 {
-
     /**
     * @var array
     */
     protected $providers;
 
-    public function __construct(?array $providers = null) {
+    public function __construct(?array $providers = null)
+    {
         $this->providers = $providers ?: [
-            \Rose\Session\SessionServiceProvider::class
+            \Rose\Session\SessionServiceProvider::class,
         ];
     }
 

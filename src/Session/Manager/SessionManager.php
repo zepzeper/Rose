@@ -6,7 +6,6 @@ use Rose\Support\Manager;
 
 class SessionManager extends Manager
 {
-
     public function getDefaultDriver()
     {
         return $this->config->get('session.driver');

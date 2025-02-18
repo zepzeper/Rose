@@ -67,20 +67,17 @@ if (! function_exists('data_get')) {
 }
 
 
-if (! function_exists('enum_value'))
-{
+if (! function_exists('enum_value')) {
     function enum_value($value, $default = null)
     {
         return $value ?? value($default);
     }
 }
 
-if (! function_exists('app'))
-{
+if (! function_exists('app')) {
     function app($abstract = null, array $parameters = [])
     {
-        if (is_null($abstract))
-        {
+        if (is_null($abstract)) {
             return Container::getInstance();
         }
 

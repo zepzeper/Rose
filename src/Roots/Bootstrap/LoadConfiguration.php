@@ -8,7 +8,6 @@ use Symfony\Component\Finder\Finder;
 
 class LoadConfiguration
 {
-
     /**
      *
      * @param  Application $app
@@ -32,12 +31,12 @@ class LoadConfiguration
 
         $app->instance('config', $config = new Repository($items));
 
+
         if (! $cachedConfigLoaded) {
             $this->loadConfigurationFiles($app, $config);
         }
 
-
-        $app->detectEnviroment(fn() => $config->get('app.env', 'production'));
+        $app->detectEnviroment(fn () => $config->get('app.env', 'production'));
 
         // Default values...
         date_default_timezone_set($config->get('app.timezone', 'UTC'));
@@ -58,11 +57,9 @@ class LoadConfiguration
 
     protected function loadConfigurationFile($name, $path, Repository $repo)
     {
-
-        $config_content = (fn() => include $path)();
+        $config_content = (fn () => include $path)();
 
         $repo->set($name, $config_content);
-
     }
 
     /**
@@ -81,8 +78,7 @@ class LoadConfiguration
             return [];
         }
 
-        foreach (Finder::create()->files()->name("*.php")->in($configPath) as $file)
-        {
+        foreach (Finder::create()->files()->name("*.php")->in($configPath) as $file) {
             $nestedDir = $this->getNestedDir($file, $configPath);
 
             $files[$nestedDir.basename($file->getRealPath(), '.php')] = $file->getRealPath();
@@ -108,8 +104,7 @@ class LoadConfiguration
     {
         $config = [];
 
-        foreach (Finder::create()->files()->name("*.php")->in(__DIR__ . '/../../config') as $file)
-        {
+        foreach (Finder::create()->files()->name("*.php")->in(__DIR__ . '/../../config') as $file) {
             $config[basename($file->getRealPath(), '.php')] = include $file->getRealPath();
         }
 

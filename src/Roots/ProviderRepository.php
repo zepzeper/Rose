@@ -2,8 +2,8 @@
 
 namespace Rose\Roots;
 
-use \Rose\Contracts\Roots\Application as ApplicationContract;
-use \Rose\System\FileSystem;
+use Rose\Contracts\Roots\Application as ApplicationContract;
+use Rose\System\FileSystem;
 
 class ProviderRepository
 {

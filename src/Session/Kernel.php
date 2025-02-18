@@ -8,14 +8,14 @@ use Rose\Exception\Session\SessionInvalidException;
 
 class Kernel implements SessionContract
 {
-
     protected Storage $storage;
 
     protected string $sessionName;
 
     protected const SESSION_PATTERN = '/^[a-zA-Z0-9_\.]{1,64}$/';
 
-    public function __construct(string $sessionName, Storage $storage = null) {
+    public function __construct(string $sessionName, Storage $storage = null)
+    {
         if ($this->isSessionKeyValid($sessionName) === false) {
             throw new SessionInvalidException("$sessionName is not a valid session name.");
         }
@@ -68,7 +68,7 @@ class Kernel implements SessionContract
     {
         $this->ensureSessionKeyIsValid($key);
 
-       return $this->storage->hasSession($key);
+        return $this->storage->hasSession($key);
     }
 
     protected function isSessionKeyValid(string $key)
@@ -78,8 +78,7 @@ class Kernel implements SessionContract
 
     protected function ensureSessionKeyIsValid($key)
     {
-        if (!$this->isSessionKeyValid($key))
-        {
+        if (!$this->isSessionKeyValid($key)) {
             throw new SessionInvalidException("$key is not a valid session key");
         }
     }

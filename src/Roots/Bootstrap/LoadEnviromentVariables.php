@@ -21,8 +21,7 @@ class LoadEnviromentVariables
 
         try {
             $this->createDotEnv($app)->safeLoad();
-        } catch (InvalidFileException $e)
-        {
+        } catch (InvalidFileException $e) {
             $this->logErrorDie($e);
         }
 
@@ -33,12 +32,12 @@ class LoadEnviromentVariables
     {
         // Store raw environment variables
         $app->instance('env.vars', $_ENV);
-        
+
         // Store Dotenv repository for advanced usage
         $app->instance('env.repository', Env::getRepository());
-        
+
         // Bind environment checker
-        $app->bind('environment', function() use ($app) {
+        $app->bind('environment', function () use ($app) {
             return $app->make('config')->get('app.env', 'production');
         });
     }

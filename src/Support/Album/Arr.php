@@ -79,7 +79,7 @@ class Arr
         foreach ($array as $values) {
             if ($values instanceof Collection) {
                 $values = $values->all();
-            } else if (! is_array($values)) {
+            } elseif (! is_array($values)) {
                 continue;
             }
 

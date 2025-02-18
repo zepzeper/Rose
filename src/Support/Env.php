@@ -37,4 +37,3 @@ class Env
         return Option::fromValue($key);
     }
 }
-

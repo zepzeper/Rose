@@ -10,7 +10,8 @@ class EventServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton(
-            'events', function ($app) {
+            'events',
+            function ($app) {
                 return (new Dispatcher($app));
             }
         );

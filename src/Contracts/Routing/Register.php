@@ -4,8 +4,8 @@ namespace Rose\Contracts\Routing;
 
 use Closure;
 
-interface Register {
-
+interface Register
+{
     /**
     * @param string $route
     * @param array $params

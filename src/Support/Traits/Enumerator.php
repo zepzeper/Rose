@@ -68,7 +68,8 @@ trait Enumerator
             $value = enum_value($value);
 
             $strings = array_filter(
-                [$retrieved, $value], function ($value) {
+                [$retrieved, $value],
+                function ($value) {
                     return match (true) {
                         is_string($value) => true,
                         $value instanceof \Stringable => true,
@@ -82,27 +83,27 @@ trait Enumerator
             }
 
             switch ($operator) {
-            default:
-            case '=':
-            case '==':  
-                return $retrieved == $value;
-            case '!=':
-            case '<>':  
-                return $retrieved != $value;
-            case '<':   
-                return $retrieved < $value;
-            case '>':   
-                return $retrieved > $value;
-            case '<=':  
-                return $retrieved <= $value;
-            case '>=':  
-                return $retrieved >= $value;
-            case '===': 
-                return $retrieved === $value;
-            case '!==': 
-                return $retrieved !== $value;
-            case '<=>': 
-                return $retrieved <=> $value;
+                default:
+                case '=':
+                case '==':
+                    return $retrieved == $value;
+                case '!=':
+                case '<>':
+                    return $retrieved != $value;
+                case '<':
+                    return $retrieved < $value;
+                case '>':
+                    return $retrieved > $value;
+                case '<=':
+                    return $retrieved <= $value;
+                case '>=':
+                    return $retrieved >= $value;
+                case '===':
+                    return $retrieved === $value;
+                case '!==':
+                    return $retrieved !== $value;
+                case '<=>':
+                    return $retrieved <=> $value;
             }
         };
 
@@ -129,7 +130,7 @@ trait Enumerator
             return $key;
         }
 
-        return fn($item) => data_get($item, $key);
+        return fn ($item) => data_get($item, $key);
     }
 
 

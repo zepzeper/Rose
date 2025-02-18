@@ -94,5 +94,3 @@ class Encryption
         return random_bytes($length); // 32 bytes = 256 bits for AES-256
     }
 }
-
-

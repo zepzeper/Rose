@@ -31,7 +31,7 @@ interface Dispatcher
      * @param  bool          $halt
      * @return array|null
      */
-    public function dispatch($event, $payload = [], $halt =false);
+    public function dispatch($event, $payload = [], $halt = false);
 
     /**
      * @param  string $event

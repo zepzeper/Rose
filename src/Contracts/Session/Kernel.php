@@ -4,7 +4,6 @@ namespace Rose\Contracts\Session;
 
 interface Kernel
 {
-
     public function set(string $key, $value);
 
     public function setArray(string $key, $value);

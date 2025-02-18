@@ -26,8 +26,7 @@ class FileSystem implements FileSystemContract
      */
     public function get($path)
     {
-        if ($this->isFile($path))
-        {
+        if ($this->isFile($path)) {
             return file_get_contents($path);
         }
 

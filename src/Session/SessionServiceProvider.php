@@ -9,13 +9,12 @@ use Rose\Support\ServiceProvider;
 
 class SessionServiceProvider extends ServiceProvider
 {
-
-    public function __construct(protected Application $app) {
+    public function __construct(protected Application $app)
+    {
     }
 
     public function register()
     {
-        dd('hier');
         $this->registerSessionManager();
         $this->registerSessionDriver();
     }

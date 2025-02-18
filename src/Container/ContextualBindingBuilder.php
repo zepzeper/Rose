@@ -9,7 +9,8 @@ class ContextualBindingBuilder
     public function __construct(
         protected Container $container,
         protected array $concretes
-    ) {}
+    ) {
+    }
 
     public function needs(string $abstract): self
     {

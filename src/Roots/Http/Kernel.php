@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Kernel implements KernelContract
 {
-
     protected $requestStartTime;
     protected Application $app;
     protected Router $router;
@@ -26,7 +25,8 @@ class Kernel implements KernelContract
         \Rose\Roots\Bootstrap\BootProvider::class,
     ];
 
-    public function __construct(Application $app, Router $router) {
+    public function __construct(Application $app, Router $router)
+    {
         $this->app = $app;
         $this->router = $router;
 
@@ -35,10 +35,9 @@ class Kernel implements KernelContract
 
     public function bootstrap(): void
     {
-        if (! $this->app->hasBeenBootstrapped()) 
-        {
+        if (! $this->app->hasBeenBootstrapped()) {
             $this->app->bootstrapWith($this->bootstrappers());
-        } 
+        }
     }
 
     /**
@@ -59,14 +58,14 @@ class Kernel implements KernelContract
         $response = $this->forwardToRouter($request);
 
         return $response;
-        
+
     }
     /**
      * @return void
      */
     protected function forwardToRouter(Request $response): void
     {
-    
+
         $this->app->getInstance();
 
 
