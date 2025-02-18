@@ -2,6 +2,7 @@
 
 namespace Rose\Roots;
 
+use Closure;
 use Composer\Autoload\ClassLoader;
 use Rose\Container\Container;
 use Rose\Container\ServiceContainer;
@@ -24,10 +25,12 @@ class Application extends Container implements ApplicationContract
     protected string $appPath;
     protected string $basePath;
     protected string $bootstrapPath;
-    protected array $configurationFiles = [];
-    protected array $environmentVariables = [];
+    protected string $environmentFile = '.env';
+    protected string $enviromentPath = __DIR__ . '/../../';
     protected ServiceContainer $container;
     protected array $serviceProviders = [];
+    protected string $getCachedConfigPath;
+
     private bool $hasBeenBootstrapped = false;
 
     private bool $booted = false;
@@ -35,8 +38,7 @@ class Application extends Container implements ApplicationContract
     // Region: Core Application Setup
     public function __construct(?string $basePath = null)
     {
-        if ($basePath)
-        {
+        if ($basePath) {
             $this->setBasePath($basePath ?? self::inferBasePath());
         }
 
@@ -73,8 +75,8 @@ class Application extends Container implements ApplicationContract
     public static function configure(?string $basePath = null): ApplicationBuilder
     {
         return (new ApplicationBuilder(new static($basePath ?? self::inferBasePath())))
-                ->withKernels()
-                ->withProviders();
+            ->withKernels()
+            ->withProviders();
     }
 
     /**
@@ -90,7 +92,7 @@ class Application extends Container implements ApplicationContract
     /**
      * Run the given array of bootstrap classes.
      *
-     * @param  array  $bootstrappers
+     * @param  array $bootstrappers
      * @return void
      */
     public function bootstrapWith($bootstrappers)
@@ -118,10 +120,10 @@ class Application extends Container implements ApplicationContract
 
     protected function bindPathsInContainer(): void
     {
-        $this->set('path.base', $this->basePath());
-        $this->set('path.config', $this->configPath());
-        $this->set('path.database', $this->databasePath());
-        $this->set('path.storage', $this->storagePath());
+        $this->instance('path.base', $this->basePath());
+        $this->instance('path.config', $this->configPath());
+        $this->instance('path.database', $this->databasePath());
+        $this->instance('path.storage', $this->storagePath());
 
         $this->useBootstrapPath($this->basePath('bootstrap'));
     }
@@ -130,7 +132,7 @@ class Application extends Container implements ApplicationContract
     /**
      * Get the base path of the installation.
      *
-     * @param  string  $path
+     * @param  string $path
      * @return string
      */
     public function basePath($path = '')
@@ -141,7 +143,7 @@ class Application extends Container implements ApplicationContract
     /**
      * Get the path to the application configuration files.
      *
-     * @param  string  $path
+     * @param  string $path
      * @return string
      */
     public function configPath($path = '')
@@ -152,7 +154,7 @@ class Application extends Container implements ApplicationContract
     /**
      * Get the path to the database directory.
      *
-     * @param  string  $path
+     * @param  string $path
      * @return string
      */
     public function databasePath($path = '')
@@ -163,7 +165,7 @@ class Application extends Container implements ApplicationContract
     /**
      * Get the path to the storage directory.
      *
-     * @param  string  $path
+     * @param  string $path
      * @return string
      */
     public function storagePath($path = '')
@@ -174,7 +176,7 @@ class Application extends Container implements ApplicationContract
     /**
      * Get the path to the bootstrap directory.
      *
-     * @param  string  $path
+     * @param  string $path
      * @return string
      */
     public function bootstrapPath($path = '')
@@ -212,18 +214,9 @@ class Application extends Container implements ApplicationContract
     protected function registerBaseServiceProviders(): void
     {
         $this->register(new EventServiceProvider($this));
-        $this->registerEnvHandler();
         $this->registerErrorHandler();
     }
 
-    protected function registerEnvHandler()
-    {
-        // Create and configure the Dotenv instance
-        $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__.'/../../');
-    
-        // Load environment variables immediately
-        $this->environmentVariables =  $dotenv->load();
-    }
 
     protected function registerErrorHandler(): void
     {
@@ -237,8 +230,8 @@ class Application extends Container implements ApplicationContract
     /**
      * Register a service provider with the application.
      *
-     * @param  \Rose\Support\ServiceProvider|string  $provider
-     * @param  bool  $force
+     * @param  \Rose\Support\ServiceProvider|string $provider
+     * @param  bool                                 $force
      * @return \Rose\Support\ServiceProvider
      */
     public function register($provider, $force = false)
@@ -255,33 +248,37 @@ class Application extends Container implements ApplicationContract
     }
 
     // Region: Configuration
-    public function setConfigPath(string $path): self
+    public function getCachedConfigPath()
     {
-        if (!is_dir($path)) {
-            throw new \RuntimeException("Configuration path [{$path}] does not exist");
-        }
-
-        foreach (glob("{$path}/*.php") as $configFile) {
-            $this->configurationFiles[basename($configFile, '.php')] = include $configFile;
-        }
-
-        return $this;
+        return '';
     }
 
-    public function configuration(string $key = null, mixed $default = null): mixed
+    public function configurationIsCached()
     {
-        if (is_null($key)) {
-            return $this->configurationFiles;
-        }
-
-        return data_get($this->configurationFiles, $key, $default);
+        return false;
     }
+
+    public function environmentPath()
+    {
+        return $this->enviromentPath ?: $this->basePath;
+    }
+
+    public function environmentFile()
+    {
+        return $this->environmentFile;
+    }
+
+    public function detectEnviroment(Closure $callback = null)
+    {
+
+    }
+
 
     // Region: Environment Management
     /**
      * Get or check the current application environment.
      *
-     * @param  string|array  ...$environments
+     * @param  string|array ...$environments
      * @return string|bool
      */
     public function environment(...$environments)
@@ -315,8 +312,8 @@ class Application extends Container implements ApplicationContract
     protected function registerBaseBindings(): void
     {
         static::setInstance($this);
-        $this->set('app', $this);
-        $this->set(Container::class, $this);
+        $this->instance('app', $this);
+        $this->instance(Container::class, $this);
     }
 
     protected function registerCoreContainerAliases(): void
@@ -337,7 +334,7 @@ class Application extends Container implements ApplicationContract
     /**
      * Resolve a service provider instance from the class name.
      *
-     * @param  string  $provider
+     * @param  string $provider
      * @return \Rose\Support\ServiceProvider
      */
     public function resolveProvider($provider)

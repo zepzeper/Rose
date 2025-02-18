@@ -46,7 +46,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Retrieve an entry from the container by its identifier.
      *
-     * @param string $id Identifier of the entry to look for.
+     * @param  string $id Identifier of the entry to look for.
      * @return mixed The resolved entry.
      */
     public function get(string $id): mixed
@@ -58,7 +58,7 @@ class Container implements ContainerContract, ArrayAccess
      * Register an alias for an abstract name.
      *
      * @param string $abstract Abstract name to alias.
-     * @param string $alias Alias name.
+     * @param string $alias    Alias name.
      */
     public function alias(string $abstract, string $alias): void
     {
@@ -68,9 +68,9 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Register a binding in the container.
      *
-     * @param string $abstract Abstract name to bind.
+     * @param string              $abstract Abstract name to bind.
      * @param Closure|string|null $callback Closure that returns the concrete implementation.
-     * @param bool $shared Whether to share the instance (singleton).
+     * @param bool                $shared   Whether to share the instance (singleton).
      */
     public function bind(string $abstract, Closure|string|null $callback = null, bool $shared = false): void
     {
@@ -83,7 +83,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Bind a method to a specific implementation.
      *
-     * @param array|string $method Method identifier (either string or [class, method] array).
+     * @param array|string        $method   Method identifier (either string or [class, method] array).
      * @param Closure|string|null $callback Closure to execute when method is called.
      */
     public function bindMethod(array|string $method, Closure|string|null $callback = null): void
@@ -99,9 +99,9 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Register a binding if it hasn't already been registered.
      *
-     * @param string $abstract Abstract name to bind.
+     * @param string              $abstract Abstract name to bind.
      * @param Closure|string|null $callback Closure that returns the concrete implementation.
-     * @param bool $shared Whether to share the instance.
+     * @param bool                $shared   Whether to share the instance.
      */
     public function bindIf(string $abstract, Closure|string|null $callback = null, bool $shared = false): void
     {
@@ -113,7 +113,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Register a shared binding (singleton).
      *
-     * @param string $abstract Abstract name to bind.
+     * @param string              $abstract Abstract name to bind.
      * @param Closure|string|null $callback Closure that returns the concrete implementation.
      */
     public function singleton(string $abstract, Closure|string|null $callback = null): void
@@ -124,7 +124,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Register a shared binding if it hasn't been registered.
      *
-     * @param string $abstract Abstract name to bind.
+     * @param string              $abstract Abstract name to bind.
      * @param Closure|string|null $callback Closure that returns the concrete implementation.
      */
     public function singletonIf(string $abstract, Closure|string|null $callback = null): void
@@ -137,7 +137,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Alias for singleton registration.
      *
-     * @param string $abstract Abstract name to bind.
+     * @param string              $abstract Abstract name to bind.
      * @param Closure|string|null $callback Closure that returns the concrete implementation.
      */
     public function scoped(string $abstract, Closure|string|null $callback = null): void
@@ -148,7 +148,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Register a scoped binding if it hasn't been registered.
      *
-     * @param string $abstract Abstract name to bind.
+     * @param string              $abstract Abstract name to bind.
      * @param Closure|string|null $callback Closure that returns the concrete implementation.
      */
     public function scopedIf(string $abstract, Closure|string|null $callback = null): void
@@ -161,7 +161,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Extend an abstract's resolution with additional functionality.
      *
-     * @param string $abstract Abstract name to extend.
+     * @param string              $abstract Abstract name to extend.
      * @param Closure|string|null $callback Closure that modifies the resolved instance.
      */
     public function extend(string $abstract, Closure|string|null $callback = null): void
@@ -173,9 +173,9 @@ class Container implements ContainerContract, ArrayAccess
      * Register an existing instance as a shared instance.
      *
      * @param string $abstract Abstract name to bind.
-     * @param mixed $instance The instance to share.
+     * @param mixed  $instance The instance to share.
      */
-    public function set($abstract, mixed $instance): void
+    public function instance($abstract, mixed $instance): void
     {
         $this->instances[$abstract] = $instance;
     }
@@ -183,7 +183,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Begin contextual binding for specific classes.
      *
-     * @param string|array $abstract Abstract(s) to bind contextually.
+     * @param  string|array $abstract Abstract(s) to bind contextually.
      * @return ContextualBindingBuilder Builder for contextual bindings.
      */
     public function when(string|array $abstract): ContextualBindingBuilder
@@ -194,7 +194,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Create a factory function for deferred instantiation.
      *
-     * @param string|stdClass $abstract Abstract to create factory for.
+     * @param  string|stdClass $abstract Abstract to create factory for.
      * @return Closure Factory function.
      */
     public function factory(string|stdClass $abstract): Closure
@@ -220,8 +220,8 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Resolve and return an instance from the container.
      *
-     * @param string $abstract Abstract to resolve.
-     * @param array $parameters Optional parameters for resolution.
+     * @param  string $abstract   Abstract to resolve.
+     * @param  array  $parameters Optional parameters for resolution.
      * @return mixed Resolved instance.
      */
     public function make(string $abstract, array $parameters = []): mixed
@@ -232,9 +232,9 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Call a method with dependency injection.
      *
-     * @param Closure $callback Method to call.
-     * @param array $parameters Parameters to use.
-     * @param mixed $default Fallback value if resolution fails.
+     * @param  Closure $callback   Method to call.
+     * @param  array   $parameters Parameters to use.
+     * @param  mixed   $default    Fallback value if resolution fails.
      * @return mixed Call result or default.
      */
     public function call(Closure $callback, array $parameters = [], mixed $default = null): mixed
@@ -249,18 +249,18 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Check if an abstract has been resolved/bound.
      *
-     * @param string $abstract Abstract to check.
+     * @param  string $abstract Abstract to check.
      * @return bool True if resolved/bound.
      */
     public function resolved(string $abstract): bool
     {
-        return isset($this->instances[$abstract]) || isset($this->bindings[$abstract]['shared']);
+        return isset($this->instances[$abstract]) || $this->isShared($abstract);
     }
 
     /**
      * Register a before-resolve callback.
      *
-     * @param string $abstract Abstract to watch.
+     * @param string       $abstract Abstract to watch.
      * @param Closure|null $callback Callback to execute.
      */
     public function beforeResolve(string $abstract, ?Closure $callback = null): void
@@ -271,8 +271,8 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Resolve an abstract and execute callback.
      *
-     * @param string $abstract Abstract to resolve.
-     * @param Closure|null $callback Callback to execute.
+     * @param  string       $abstract Abstract to resolve.
+     * @param  Closure|null $callback Callback to execute.
      * @return mixed Resolved instance.
      */
     public function resolving(string $abstract, ?Closure $callback = null): mixed
@@ -289,7 +289,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Register an after-resolve callback.
      *
-     * @param string $abstract Abstract to watch.
+     * @param string       $abstract Abstract to watch.
      * @param Closure|null $callback Callback to execute.
      */
     public function afterResolve(string $abstract, ?Closure $callback = null): void
@@ -300,8 +300,8 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Core resolution logic for the container.
      *
-     * @param string $abstract Abstract to resolve.
-     * @param array $parameters Optional parameters.
+     * @param  string $abstract   Abstract to resolve.
+     * @param  array  $parameters Optional parameters.
      * @return mixed Resolved instance.
      */
     protected function resolve(string $abstract, array $parameters = []): mixed
@@ -323,7 +323,6 @@ class Container implements ContainerContract, ArrayAccess
 
         // Build the concrete implementation
         if ($concrete === $abstract || $concrete instanceof Closure) {
-            dd($this);
             $object = $this->build($concrete, $parameters);
         } else {
             $object = $this->resolve($concrete, $parameters);
@@ -350,7 +349,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Get contextual concrete implementation for abstract.
      *
-     * @param string $abstract Abstract to check.
+     * @param  string $abstract Abstract to check.
      * @return mixed Contextual concrete or null.
      */
     protected function getContextualConcrete(string $abstract): mixed
@@ -361,7 +360,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Get registered concrete implementation for abstract.
      *
-     * @param string $abstract Abstract to check.
+     * @param  string $abstract Abstract to check.
      * @return mixed Concrete implementation or abstract.
      */
     protected function getConcrete(string $abstract): mixed
@@ -370,14 +369,14 @@ class Container implements ContainerContract, ArrayAccess
             return $this->bindings[$abstract]['concrete'];
         }
 
-        return $abstract;
+         return $abstract;
     }
 
     /**
      * Build a concrete instance.
      *
-     * @param mixed $concrete Concrete to build (class name or Closure).
-     * @param array $parameters Construction parameters.
+     * @param  mixed $concrete   Concrete to build (class name or Closure).
+     * @param  array $parameters Construction parameters.
      * @return mixed Built instance.
      * @throws RuntimeException If not instantiable.
      */
@@ -411,8 +410,8 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Resolve class constructor dependencies.
      *
-     * @param array $dependencies Parameter reflections.
-     * @param array $parameters Provided parameters.
+     * @param  array $dependencies Parameter reflections.
+     * @param  array $parameters   Provided parameters.
      * @return array Resolved dependencies.
      * @throws RuntimeException If dependency cannot be resolved.
      */
@@ -446,8 +445,8 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Resolve method dependencies for a callback.
      *
-     * @param Closure $callback Callback to analyze.
-     * @param array $parameters Provided parameters.
+     * @param  Closure $callback   Callback to analyze.
+     * @param  array   $parameters Provided parameters.
      * @return array Resolved parameters.
      * @throws RuntimeException If parameter cannot be resolved.
      */
@@ -479,7 +478,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Check if an abstract is registered as shared.
      *
-     * @param string $abstract Abstract to check.
+     * @param  string $abstract Abstract to check.
      * @return bool True if shared.
      */
     protected function isShared(string $abstract): bool
@@ -490,7 +489,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Check if an abstract is bound in the container.
      *
-     * @param string $abstract Abstract to check.
+     * @param  string $abstract Abstract to check.
      * @return bool True if bound.
      */
     public function bound(string $abstract): bool
@@ -503,7 +502,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Get the extender callbacks for a given type.
      *
-     * @param  string  $abstract
+     * @param  string $abstract
      * @return array
      */
     protected function getExtenders($abstract)
@@ -514,7 +513,7 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Get the aliased name for an abstract.
      *
-     * @param string $abstract Abstract to check.
+     * @param  string $abstract Abstract to check.
      * @return string Aliased name or original.
      */
     public function getAlias(string $abstract): string
@@ -543,47 +542,47 @@ class Container implements ContainerContract, ArrayAccess
     }
 
     /**
-    *
-    * @param string $offset
-    * @return bool
-    */
+     *
+     * @param  string $offset
+     * @return bool
+     */
     public function offsetExists($offset): bool
     {
         return $this->bound($offset);
     }
 
     /**
-    *
-    * @param string $offset
-    * @return mixed
-    */
+     *
+     * @param  string $offset
+     * @return mixed
+     */
     public function offsetGet($offset): mixed
     {
         return $this->make($offset);
     }
 
     /**
-    *
-    * @param string $offset
-    * @param Closure|mixed $offset
-    * @return void
-    */
+     *
+     * @param  string        $offset
+     * @param  Closure|mixed $offset
+     * @return void
+     */
     public function offsetSet($offset, $value): void
     {
         $this->bind($offset, $value instanceof Closure ? $value : fn() => $value);
     }
 
     /**
-    *
-    * @param string $offset
-    * @return void
-    */
+     *
+     * @param  string $offset
+     * @return void
+     */
     public function offsetUnset($offset): void
     {
         unset(
             $this->bindings[$offset],
             $this->instances[$offset],
-            $this->resolved[$key]
+            $this->resolved[$offset]
         );
     }
 }

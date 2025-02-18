@@ -19,8 +19,8 @@ abstract class ServiceProvider
     /**
      * Merge the given configuration with the existing configuration.
      *
-     * @param  string  $path
-     * @param  string  $key
+     * @param  string $path
+     * @param  string $key
      * @return void
      */
     protected function mergeConfigFrom(string $path, string $key)
@@ -72,6 +72,11 @@ abstract class ServiceProvider
         return $this->publishes;
     }
 
+    public static function defaultProviders()
+    {
+        return new DefaultProviders();
+    }
+
     /**
      * Ensure the publishes array is initialized for the given group.
      *
@@ -84,6 +89,7 @@ abstract class ServiceProvider
             $this->publishes[$group] = [];
         }
     }
+
 
     /**
      * Register any application services.

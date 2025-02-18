@@ -28,7 +28,7 @@ interface Container
     
     public function extend(string $abstract, Closure|string|null $callback = null): void;
     
-    public function set($abstract, mixed $instance): void;
+    public function instance($abstract, mixed $instance): void;
     
     public function when(string|array $abstract): ContextualBindingBuilder;
     

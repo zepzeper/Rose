@@ -28,12 +28,10 @@ class RegisterProviders
      */
     public function bootstrap(Application $app)
     {
-        if (! $app->bound('config_loaded_from_cache') ||
-            $app->make('config_loaded_from_cache') === false) {
+        if (! $app->bound('cached_config_loaded') ||
+            $app->make('cached_config_loaded') === false) {
             $this->mergeAdditionalProviders($app);
         }
-
-        dd('FINALLY');
 
         $app->registerConfiguredProviders();
     }
@@ -54,7 +52,7 @@ class RegisterProviders
             }
         }
 
-        $app->make('app')->set(
+        $app->make('app')->instance(
             'app.providers',
             array_merge(
                 $app->make('app')->get('app.providers') ?? ServiceProvider::defaultProviders()->toArray(),

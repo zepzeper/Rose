@@ -1,6 +1,6 @@
 <?php
 
-namespace Rose\Support\Album;
+use Rose\Support\Env;
 
 if (! function_exists('get_data')) {
     /**
@@ -61,5 +61,32 @@ if (! function_exists('get_data')) {
         }
 
         return $target;
+    }
+}
+
+if (! function_exists('env'))
+{
+    function env($key, $default = null)
+    {
+        return Env::get($key, $default);
+    }
+                 
+}
+
+if (! function_exists('value')) {
+
+    /**
+     * Return the default value of the given value.
+     *
+     * @template TValue
+     * @template TArgs
+     *
+     * @param  TValue|\Closure(TArgs): TValue  $value
+     * @param  TArgs  ...$args
+     * @return TValue
+     */
+    function value($value, ...$args)
+    {
+        return $value instanceof Closure ? $value(...$args) : $value;
     }
 }

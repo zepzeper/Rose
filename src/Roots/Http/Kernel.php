@@ -20,6 +20,8 @@ class Kernel implements KernelContract
      * @var string[]
      */
     protected array $bootstrappers = [
+        \Rose\Roots\Bootstrap\LoadEnviromentVariables::class,
+        \Rose\Roots\Bootstrap\LoadConfiguration::class,
         \Rose\Roots\Bootstrap\RegisterProviders::class,
         \Rose\Roots\Bootstrap\BootProvider::class,
     ];
