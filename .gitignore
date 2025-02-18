@@ -1,6 +1,8 @@
 vendor/
 composer.lock
 .env
+.php-cs-fixer.cache
+.phpunit.cache
 
 # macOS system files
 **/.DS_Store

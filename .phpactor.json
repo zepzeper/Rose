@@ -1,9 +1,0 @@
-{
-    "$schema": "/phpactor.schema.json",
-    "indexer.exclude_patterns": [
-        "/vendor/**/Tests/**/*",
-        "/vendor/**/tests/**/*",
-        "/var/cache/**/*",
-        "/vendor/composer/**/*"
-    ]
-}
