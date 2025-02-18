@@ -66,6 +66,22 @@ if (! function_exists('data_get')) {
     }
 }
 
+if (! function_exists('tap')) {
+    /**
+     * Call the given Closure with the given value then return the value.
+     */
+    function tap($value, $callback = null)
+    {
+        if (is_null($callback)) {
+            return new Exception($value);
+        }
+
+        $callback($value);
+
+        return $value;
+    }
+}
+
 
 if (! function_exists('enum_value')) {
     function enum_value($value, $default = null)
@@ -82,13 +98,6 @@ if (! function_exists('app')) {
         }
 
         return Container::getInstance()->make($abstract, $parameters);
-    }
-}
-
-if (! function_exists('env')) {
-    function env($key, $default = null)
-    {
-        return app()->make('env.repository')->get($key) ?? value($default);
     }
 }
 
@@ -109,3 +118,11 @@ if (! function_exists('value')) {
         return $value instanceof Closure ? $value(...$args) : $value;
     }
 }
+
+if (! function_exists('env')) {
+    function env($key, $default = null)
+    {
+        return app()->make('env.repository')->get($key) ?? value($default);
+    }
+}
+

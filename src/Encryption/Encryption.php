@@ -1,9 +1,10 @@
 <?php
 
-namespace Rose\Security;
+namespace Rose\Encryption;
 
 use Exception;
-use Rose\Exception\Encryption\Security\EncryptionFailureException;
+use Rose\Exception\Encryption\EncryptionFailureException;
+use RuntimeException;
 
 class Encryption
 {
@@ -11,19 +12,50 @@ class Encryption
     private string $cipherAlgorithm;
 
     /**
-     * @param string $encryptionKey Secret key (binary string).
+     * The supported cipher algorithms and their properties.
+     *
+     * @var array
+     */
+    private static $supportedCiphers = [
+        'aes-128-cbc' => ['size' => 16, 'aead' => false],
+        'aes-256-cbc' => ['size' => 32, 'aead' => false],
+        'aes-128-gcm' => ['size' => 16, 'aead' => true],
+        'aes-256-gcm' => ['size' => 32, 'aead' => true],
+    ];
+
+    /**
+     * @param string $encryptionKey   Secret key (binary string).
      * @param string $cipherAlgorithm Default: 'aes-256-gcm' or 'chacha20-poly1305'
      */
     public function __construct(
         string $encryptionKey,
         string $cipherAlgorithm = 'aes-256-gcm'
     ) {
-        if (!in_array($cipherAlgorithm, openssl_get_cipher_methods())) {
-            throw new EncryptionFailureException("Unsupported cipher algorithm: $cipherAlgorithm");
+        if (! static::supported($encryptionKey, $cipherAlgorithm)) {
+            $ciphers = implode(', ', array_keys(self::$supportedCiphers));
+
+            throw new RuntimeException("Unsupported cipher or incorrect key length. Supported ciphers are: {$ciphers}.");
         }
 
         $this->encryptionKey = $encryptionKey;
         $this->cipherAlgorithm = $cipherAlgorithm;
+    }
+
+    /**
+     * Determine if the given key and cipher combination is valid.
+     *
+     * @param  string $key
+     * @param  string $cipher
+     * @return bool
+     */
+    public static function supported($key, $cipher)
+    {
+        if (! isset(self::$supportedCiphers[strtolower($cipher)])) {
+            return false;
+        }
+
+
+        return mb_strlen($key, '8bit') === self::$supportedCiphers[strtolower($cipher)]['size'];
     }
 
     /**

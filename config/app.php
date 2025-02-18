@@ -14,6 +14,11 @@ return [
     'debug' => env('APP_DEBUG', false),
 
     'timezone' => env('APP_TIMEZONE', 'UTC'),
+
+    'key' => env('APP_KEY'),
+
+    'cipher' => 'aes-256-gcm',
+
     /**
     *
     * Autoloaded ServiceProvidres

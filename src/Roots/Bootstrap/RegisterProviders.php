@@ -23,7 +23,8 @@ class RegisterProviders
 
     /**
      * Bootstrap the given application.
-     * @param Application $app
+     *
+     * @param  Application $app
      * @return void
      */
     public function bootstrap(Application $app)
@@ -40,42 +41,48 @@ class RegisterProviders
      */
     protected function mergeAdditionalProviders(Application $app)
     {
-        if (static::$bootstrapProviderPath &&
-            file_exists(static::$bootstrapProviderPath)) {
-            $packageProviders = require static::$bootstrapProviderPath;
-
+        // Get default providers first
+        $defaultProviders = ServiceProvider::defaultProviders()->toArray();
+    
+        $packageProviders = [];
+        if (static::$bootstrapProviderPath && file_exists(static::$bootstrapProviderPath)) {
+            $packageProviders = include static::$bootstrapProviderPath;
             foreach ($packageProviders as $index => $provider) {
-                if (! class_exists($provider)) {
+                if (!class_exists($provider)) {
                     unset($packageProviders[$index]);
                 }
             }
         }
 
+        // Use default providers as the base, then merge others
         $app->make('config')->set(
             'app.providers',
             array_merge(
-                $app->make('config')->get('app.providers') ?? ServiceProvider::defaultProviders()->toArray(),
+                $defaultProviders,
                 static::$merge,
                 array_values($packageProviders ?? []),
             ),
         );
-
     }
 
     /**
      * Merge the given providers into the provider configuration before registration.
      *
-     * @param  array  $providers
-     * @param  string|null  $bootstrapProviderPath
+     * @param  array       $providers
+     * @param  string|null $bootstrapProviderPath
      * @return void
      */
     public static function merge(array $providers, ?string $bootstrapProviderPath = null)
     {
         static::$bootstrapProviderPath = $bootstrapProviderPath;
 
-        static::$merge = array_values(array_filter(array_unique(
-            array_merge(static::$merge, $providers)
-        )));
+        static::$merge = array_values(
+            array_filter(
+                array_unique(
+                    array_merge(static::$merge, $providers)
+                )
+            )
+        );
     }
 
     /**

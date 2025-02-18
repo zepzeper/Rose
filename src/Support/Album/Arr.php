@@ -23,7 +23,7 @@ class Arr
     /**
      *
      * @param Enumerator|ArrayAccess|array $array
-     * @param string|int|float  $key
+     * @param string|int|float             $key
      *
      * @return bool
      */
@@ -37,7 +37,7 @@ class Arr
             return $array->offsetExists($key);
         }
 
-        return array_key_exists($array, $key);
+        return array_key_exists($key, $array);
     }
 
     /**
@@ -69,7 +69,7 @@ class Arr
     /**
      * Flatten array of arrays to a single array
      *
-     * @param  array $array
+     * @param  iterable $array
      * @return array
      */
     public static function flatten($array)
@@ -79,14 +79,17 @@ class Arr
         foreach ($array as $values) {
             if ($values instanceof Collection) {
                 $values = $values->all();
-            } elseif (! is_array($values)) {
-                continue;
             }
 
-            $results[] = $values;
+            if (is_array($values)) {
+                $results = array_merge($results, $values);
+            } else {
+                // Add abstract values directly to the results
+                $results[] = $values;
+            }
         }
 
-        return array_merge([], ...$results);
+        return $results;
     }
 
     /**
@@ -96,14 +99,30 @@ class Arr
      *
      * @return mixed
      */
-    public static function get($array, $key, $value = null)
+    public static function get($array, $key, $default = null)
     {
+        if (! static::accessible($array)) {
+            return value($default);
+        }
+
         if (is_null($key)) {
             return $array;
         }
 
-        if (str_contains($key, '.')) {
-            return $array[$key] ?? value($value);
+        if (static::exists($array, $key)) {
+            return $array[$key];
+        }
+
+        if (! str_contains($key, '.')) {
+            return $array[$key] ?? value($default);
+        }
+
+        foreach (explode('.', $key) as $segment) {
+            if (static::accessible($array) && static::exists($array, $segment)) {
+                $array = $array[$segment];
+            } else {
+                return value($default);
+            }
         }
 
         return $array;

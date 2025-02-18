@@ -63,8 +63,6 @@ class Application extends Container implements ApplicationContract
             return;
         }
 
-        dd($this);
-
         array_walk(
             $this->serviceProviders,
             function ($q) {
@@ -220,13 +218,13 @@ class Application extends Container implements ApplicationContract
      */
     public function registerConfiguredProviders()
     {
-        $providers = (new Collection($this->make('config')->get('app.providers')))
-            ->partition(fn ($provider) => str_starts_with($provider, 'Rose\\'));
-
-        // TODO: SessionServiceProvider not being registered cause $provider only contain Application
-
+        $configProviders = $this->make('config')->get('app.providers');
+    
+        $providers = (new Collection($configProviders));
+            //->partition(fn ($provider) => str_starts_with($provider, 'Rose\\'));
+    
         (new ProviderRepository($this, new FileSystem(), ''))
-            ->load($providers->flatten()->toArray());
+        ->load($providers->flatten()->toArray());
     }
 
     protected function registerBaseServiceProviders(): void
@@ -262,7 +260,12 @@ class Application extends Container implements ApplicationContract
             $provider->register();
         }
 
-        $this->serviceProviders[] = $provider;
+        // Make sure we're not adding duplicates
+        if (!in_array($provider, $this->serviceProviders, true)) {
+            $this->serviceProviders[] = $provider;
+        }
+
+        return $provider;  // Return the provider for chaining
     }
 
     // Region: Configuration
@@ -335,6 +338,7 @@ class Application extends Container implements ApplicationContract
         $aliases = [
             'app' => [self::class, Container::class, Application::class],
             'events' => [\Rose\Events\Dispatcher::class, \Rose\Contracts\Events\Dispatcher::class],
+            'encrypter' => [\Rose\Security\Encryption::class],
             'session' => [\Rose\Session\Manager\SessionManager::class],
         ];
 

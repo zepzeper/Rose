@@ -21,7 +21,9 @@ class SessionServiceProvider extends ServiceProvider
 
     protected function registerSessionManager()
     {
-        $this->app->singleton('session', function (Application $app, Encryption $encryption) {
+        $this->app->singleton('session', function (Application $app) {
+            $encryption = $app->make(Encryption::class);
+
             return new NativeSessionStorage($app, $encryption);
         });
     }

@@ -28,16 +28,25 @@ class Collection
         $this->items = $this->getArrayableItems($items);
     }
 
+    /**
+     * @return array<TKey,TValue>
+     */
     public function all()
     {
         return $this->items;
     }
 
+    /**
+     * @return Collection
+     */
     public function flatten()
     {
         return new static(Arr::flatten($this->items));
     }
 
+    /**
+     * @return Collection
+     */
     public function map(callable $callback)
     {
         return new static(Arr::map($this->items, $callback));

@@ -3,9 +3,9 @@
 namespace Rose\Session\Storage;
 
 use Rose\Exception\Encryption\DecryptionFailureException;
-use Rose\Exception\Encryption\Security\EncryptionFailureException;
+use Rose\Exception\Encryption\EncryptionFailureException;
 use Rose\Roots\Application;
-use Rose\Security\Encryption;
+use Rose\Encryption\Encryption;
 
 class NativeSessionStorage extends AbstractSessionStorage
 {

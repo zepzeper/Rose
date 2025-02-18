@@ -1,6 +1,6 @@
 <?php
 
-namespace Rose\Exceptions\Encryption\Security;
+namespace Rose\Exceptions\Encryption;
 
 use Exception;
 

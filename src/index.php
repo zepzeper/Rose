@@ -13,3 +13,7 @@ $app = Application::configure()
 $app->make(\Rose\Roots\Http\Kernel::class);
 
 dd($app);
+
+$session = $app->make('session');
+
+

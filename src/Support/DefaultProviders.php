@@ -5,22 +5,23 @@ namespace Rose\Support;
 class DefaultProviders
 {
     /**
-    * @var array
-    */
+     * @var array
+     */
     protected $providers;
 
     public function __construct(?array $providers = null)
     {
         $this->providers = $providers ?: [
+            \Rose\Encryption\EncryptionServiceProvider::class,
             \Rose\Session\SessionServiceProvider::class,
         ];
     }
 
     /**
-    *
-    * @param array $providers
-    * @return static
-    */
+     *
+     * @param  array $providers
+     * @return static
+     */
     public function merge($providers)
     {
         $this->providers = array_merge($this->providers, $providers);
@@ -29,8 +30,8 @@ class DefaultProviders
     }
 
     /**
-    * @return array
-    */
+     * @return array
+     */
     public function toArray()
     {
         return $this->providers;
