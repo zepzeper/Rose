@@ -70,7 +70,7 @@ abstract class AbstractSessionStorage implements StorageContract
         $domain = (isset($this->options['domain']) ? $this->options['domain'] : isset($_SERVER['SERVER_NAME']));
         $secure = $this->options['secure'] ?? (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
 
-        session_set_cookie_params($this->options['lifetime'], $this->options['path'], $domain, $secure, $this->options['http_only'], $this->options['samesite'] ?? 'Lax');
+        session_set_cookie_params($this->options['lifetime'], $this->options['path'], $domain, $secure, $this->options['http_only']);
 
         $this->startSession();
     }

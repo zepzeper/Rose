@@ -36,6 +36,7 @@ class LoadConfiguration
             $this->loadConfigurationFiles($app, $config);
         }
 
+
         $app->detectEnviroment(fn() => $config->get('app.env', 'production'));
 
         // Default values...

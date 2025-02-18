@@ -1,8 +1,10 @@
 <?php
 
+use Rose\Container\Container;
 use Rose\Support\Env;
+use Rose\Support\Album\Arr;
 
-if (! function_exists('get_data')) {
+if (! function_exists('data_get')) {
     /**
      * Get an item from an array or object using "dot" notation.
      *
@@ -39,7 +41,7 @@ if (! function_exists('get_data')) {
                     $result[] = data_get($item, $key);
                 }
 
-                return in_array('*', $key) ? Arr::collapse($result) : $result;
+                return in_array('*', $key) ? Arr::flatten($result) : $result;
             }
 
             $segment = match ($segment) {
@@ -64,13 +66,33 @@ if (! function_exists('get_data')) {
     }
 }
 
-if (! function_exists('env'))
+
+if (! function_exists('enum_value'))
 {
+    function enum_value($value, $default = null)
+    {
+        return $value ?? value($default);
+    }
+}
+
+if (! function_exists('app'))
+{
+    function app($abstract = null, array $parameters = [])
+    {
+        if (is_null($abstract))
+        {
+            return Container::getInstance();
+        }
+
+        return Container::getInstance()->make($abstract, $parameters);
+    }
+}
+
+if (! function_exists('env')) {
     function env($key, $default = null)
     {
-        return Env::get($key, $default);
+        return app()->make('env.repository')->get($key) ?? value($default);
     }
-                 
 }
 
 if (! function_exists('value')) {

@@ -1,8 +1,6 @@
 <?php
 
-namespace Rose\Roots\System;
-
-if (! function_exists('Rose\Roots\System\join_paths')) {
+if (! function_exists('join_paths')) {
 
     function join_paths($basePath, ...$paths)
     {

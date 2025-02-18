@@ -4,7 +4,7 @@ FROM php:8.2-apache
 WORKDIR /var/www/html
 
 RUN apt-get update
-RUN apt install -y vim systemctl
+RUN apt install -y vim systemctl unzip git
 
 # XDEBUG
 RUN pecl install xdebug \

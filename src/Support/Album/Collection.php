@@ -27,6 +27,21 @@ class Collection
         $this->items = $this->getArrayableItems($items);
     }
 
+    public function all()
+    {
+        return $this->items;
+    }
+
+    public function flatten()
+    {
+        return new static(Arr::flatten($this->items));
+    }
+
+    public function map(callable $callback)
+    {
+        return new static(Arr::map($this->items, $callback));
+    }
+
     /**
      * @param mixed $items
      * @return array<TKey, TValue>
@@ -47,5 +62,6 @@ class Collection
             default => (array) $items
         };
     }
+
 
 }

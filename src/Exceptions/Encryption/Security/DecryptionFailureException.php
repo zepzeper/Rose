@@ -1,10 +1,10 @@
 <?php
 
-namespace Rose\Exception\Encryption;
+namespace Rose\Exceptions\Encryption\Security;
 
-use InvalidArgumentException;
+use Exception;
 
-class DecryptionFailureException implements InvalidArgumentException
+class DecryptionFailureException extends Exception
 {
 
 }

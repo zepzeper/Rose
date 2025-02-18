@@ -5,30 +5,35 @@ namespace Rose\Roots;
 use Closure;
 use Composer\Autoload\ClassLoader;
 use Rose\Container\Container;
-use Rose\Container\ServiceContainer;
 use Rose\Contracts\Roots\Application as ApplicationContract;
 use Rose\Events\EventServiceProvider;
 use Rose\Roots\Bootstrap\RegisterProviders;
 use Rose\Roots\Configuration\ApplicationBuilder;
 use Rose\Session\SessionServiceProvider;
 use Rose\Support\Album\Collection;
+use Rose\Support\ServiceProvider;
+use Rose\System\FileSystem;
 use Whoops\Handler\PrettyPageHandler;
 use Whoops\Run;
-
-use function Rose\Support\Album\data_get;
-use function Rose\System\join_paths;
 
 class Application extends Container implements ApplicationContract
 {
     const VERSION = '0.1.alpha';
 
     protected string $appPath;
+
     protected string $basePath;
+
     protected string $bootstrapPath;
+
     protected string $environmentFile = '.env';
+
     protected string $enviromentPath = __DIR__ . '/../../';
-    protected ServiceContainer $container;
+
+    protected Container $container;
+
     protected array $serviceProviders = [];
+
     protected string $getCachedConfigPath;
 
     private bool $hasBeenBootstrapped = false;
@@ -65,6 +70,15 @@ class Application extends Container implements ApplicationContract
         );
 
         $this->booted = true;
+    }
+
+    protected function bootProvider(ServiceProvider $provider)
+    {
+        if (method_exists($provider, 'boot'))
+        {
+            $this->call([$provider, 'boot']);
+        }
+
     }
 
     public function isBooted()
@@ -207,8 +221,10 @@ class Application extends Container implements ApplicationContract
         $providers = (new Collection($this->make('config')->get('app.providers')))
             ->partition(fn ($provider) => str_starts_with($provider, 'Rose\\'));
 
-        (new ProviderRepository($this, new FileSystem, null))
-            ->load($providers->collapse()->toArray());
+        // SessionServiceProvider not being registered cause $provider only contain Application
+
+        (new ProviderRepository($this, new FileSystem, ''))
+            ->load($providers->flatten()->toArray());
     }
 
     protected function registerBaseServiceProviders(): void
@@ -220,9 +236,9 @@ class Application extends Container implements ApplicationContract
 
     protected function registerErrorHandler(): void
     {
-        if ($this->environment('production')) {
-            return;
-        }
+        //if ($this->environment('production')) {
+        //    return;
+        //}
 
         (new Run())->pushHandler(new PrettyPageHandler());
     }
@@ -283,11 +299,7 @@ class Application extends Container implements ApplicationContract
      */
     public function environment(...$environments)
     {
-        if (is_array($environments)) {
-            return in_array($this->environmentVariables['APP_ENV'] ?? null, $environments);
-        }
-
-        return $this->environmentVariables['APP_ENV'] === $environments;
+        return env('APP_ENV') == $environments;
     }
 
     // Region: Utilities
@@ -349,6 +361,6 @@ class Application extends Container implements ApplicationContract
      */
     public function version()
     {
-        return VERSION;
+        return self::VERSION;
     }
 }

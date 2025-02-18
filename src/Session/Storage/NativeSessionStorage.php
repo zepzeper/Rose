@@ -9,24 +9,11 @@ use Rose\Security\Encryption;
 
 class NativeSessionStorage extends AbstractSessionStorage
 {
-    private Encryption $encryptor;
-
-    public function __construct(Application $app)
+    public function __construct(Application $app, private Encryption $encryptor)
     {
         $config = $app->make('app')->get('session');
 
         parent::__construct($app);
-
-        $key = $config['encryption_key'];
-
-        if (empty($key)) {
-            throw new \RuntimeException('Encryption key is required');
-        }
-
-        $this->encryptor = new Encryption(
-            $key,
-            $config['cipher_algorithm'] ?? 'aes-256-gcm'
-        );
     }
 
     public function setSession(string $key, $value): void

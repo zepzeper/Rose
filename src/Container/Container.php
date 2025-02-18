@@ -5,6 +5,7 @@ namespace Rose\Container;
 use ArrayAccess;
 use Closure;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionFunction;
 use Rose\Contracts\Container\Container as ContainerContract;
 use RuntimeException;
@@ -232,12 +233,12 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Call a method with dependency injection.
      *
-     * @param  Closure $callback   Method to call.
+     * @param  callable|string $callback   Method to call.
      * @param  array   $parameters Parameters to use.
-     * @param  mixed   $default    Fallback value if resolution fails.
+     * @param  string|null   $default    Fallback value if resolution fails.
      * @return mixed Call result or default.
      */
-    public function call(Closure $callback, array $parameters = [], mixed $default = null): mixed
+    public function call($callback, $parameters = [], $default = null): mixed
     {
         try {
             return $callback(...$this->resolveMethodDependencies($callback, $parameters));
@@ -316,13 +317,20 @@ class Container implements ContainerContract, ArrayAccess
         // Get context-specific concrete implementation
         $concrete = $this->getContextualConcrete($abstract);
 
+        $needsContextBuild = ! empty($parameters) || ! is_null($concrete);
+
+        if (isset($this->instance[$abstract]) && ! $needsContextBuild)
+        {
+            return $this->instance[$abstract];
+        }
+
         // Fall back to registered concrete or abstract itself
         if (is_null($concrete)) {
             $concrete = $this->getConcrete($abstract);
         }
 
         // Build the concrete implementation
-        if ($concrete === $abstract || $concrete instanceof Closure) {
+        if ($this->isBuildable($concrete, $abstract)) {
             $object = $this->build($concrete, $parameters);
         } else {
             $object = $this->resolve($concrete, $parameters);
@@ -336,11 +344,6 @@ class Container implements ContainerContract, ArrayAccess
         // Store shared instances
         if ($this->isShared($abstract)) {
             $this->instances[$abstract] = $object;
-        }
-
-        // Trigger after-resolve callbacks
-        foreach ($this->afterResolving[$abstract] ?? [] as $afterCallback) {
-            $afterCallback($object, $this);
         }
 
         return $object;
@@ -371,6 +374,16 @@ class Container implements ContainerContract, ArrayAccess
 
          return $abstract;
     }
+    /**
+     * @param mixed $concrete
+     * @param string $abstract
+     *
+     * @return bool
+     */
+    protected function isBuildable($concrete, $abstract)
+    {
+        return $concrete === $abstract || $concrete instanceof Closure;
+    }
 
     /**
      * Build a concrete instance.
@@ -387,7 +400,11 @@ class Container implements ContainerContract, ArrayAccess
             return $concrete($this, $parameters);
         }
 
-        $reflector = new ReflectionClass($concrete);
+        try {
+            $reflector = new ReflectionClass($concrete);
+        } catch (ReflectionException $e) {
+            throw new ReflectionException("Target class [$concrete] does not exist.", 0, $e);
+        }
 
         if (!$reflector->isInstantiable()) {
             throw new RuntimeException("Class {$concrete} is not instantiable");

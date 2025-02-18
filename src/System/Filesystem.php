@@ -2,10 +2,10 @@
 
 namespace Rose\System;
 
-use Rose\Contracts\System\Filesystem as FilesystemContract;
+use Rose\Contracts\System\FileSystem as FileSystemContract;
 use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 
-class Filesystem implements FilesystemContract
+class FileSystem implements FileSystemContract
 {
     /**
      * Determine if a file or dir exists

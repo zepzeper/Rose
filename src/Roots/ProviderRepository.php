@@ -3,7 +3,7 @@
 namespace Rose\Roots;
 
 use \Rose\Contracts\Roots\Application as ApplicationContract;
-use \Rose\System\Filesystem;
+use \Rose\System\FileSystem;
 
 class ProviderRepository
 {
@@ -16,7 +16,7 @@ class ProviderRepository
 
     protected $manifest;
 
-    public function __construct(ApplicationContract $app, Filesystem $files, string $manifest)
+    public function __construct(ApplicationContract $app, FileSystem $files, string $manifest)
     {
         $this->app = $app;
         $this->files = $files;

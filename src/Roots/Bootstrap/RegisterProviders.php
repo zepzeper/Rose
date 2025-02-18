@@ -28,8 +28,7 @@ class RegisterProviders
      */
     public function bootstrap(Application $app)
     {
-        if (! $app->bound('cached_config_loaded') ||
-            $app->make('cached_config_loaded') === false) {
+        if (! $app->bound('cached_config_loaded') || $app->make('cached_config_loaded') === false) {
             $this->mergeAdditionalProviders($app);
         }
 
@@ -55,7 +54,7 @@ class RegisterProviders
         $app->make('app')->instance(
             'app.providers',
             array_merge(
-                $app->make('app')->get('app.providers') ?? ServiceProvider::defaultProviders()->toArray(),
+                /**$app->make('app')->get('app.providers') ??*/ ServiceProvider::defaultProviders()->toArray(),
                 static::$merge,
                 array_values($packageProviders ?? []),
             ),

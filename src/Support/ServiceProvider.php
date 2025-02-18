@@ -11,6 +11,9 @@ abstract class ServiceProvider
 
     protected array $publishes = [];
 
+    /**
+     * @param Application $app
+     */
     public function __construct($app)
     {
         $this->app = $app;
@@ -71,7 +74,9 @@ abstract class ServiceProvider
 
         return $this->publishes;
     }
-
+    /**
+     * @return DefaultProviders
+     */
     public static function defaultProviders()
     {
         return new DefaultProviders();
@@ -97,14 +102,4 @@ abstract class ServiceProvider
      * @return void
      */
     abstract public function register();
-
-    /**
-     * Boot the service provider.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        // 
-    }
 }

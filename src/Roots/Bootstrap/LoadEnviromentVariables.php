@@ -10,13 +10,12 @@ use Rose\Support\Env;
 class LoadEnviromentVariables
 {
     /**
-    * @param Application $app
-    * @return void
-    */
+     * @param  Application $app
+     * @return void
+     */
     public function bootstrap(Application $app)
     {
-        if ($app->configurationIsCached())
-        {
+        if ($app->configurationIsCached()) {
             return;
         }
 
@@ -26,13 +25,37 @@ class LoadEnviromentVariables
         {
             $this->logErrorDie($e);
         }
+
+        $this->registerEnvInContainer($app);
     }
 
+    protected function registerEnvInContainer(Application $app)
+    {
+        // Store raw environment variables
+        $app->instance('env.vars', $_ENV);
+        
+        // Store Dotenv repository for advanced usage
+        $app->instance('env.repository', Env::getRepository());
+        
+        // Bind environment checker
+        $app->bind('environment', function() use ($app) {
+            return $app->make('config')->get('app.env', 'production');
+        });
+    }
+
+    /**
+     * @param  Application $app
+     * @return Dotenv
+     */
     protected function createDotEnv(Application $app)
     {
         return Dotenv::create(Env::getRepository(), $app->environmentPath(), $app->environmentFile());
     }
 
+    /**
+     * @param  InvalidFileException $e
+     * @return void
+     */
     protected function logErrorDie(InvalidFileException $e)
     {
 

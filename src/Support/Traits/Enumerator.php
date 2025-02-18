@@ -3,7 +3,7 @@
 namespace Rose\Support\Traits;
 
 use Closure;
-use function Rose\Support\Album\data_get;
+use Rose\Contracts\Support\ArrayAble;
 
 trait Enumerator
 {
@@ -21,7 +21,7 @@ trait Enumerator
 
         $callback = func_num_args() === 1 ? $this->getValue($key) : $this->operatorForWhere(...func_num_args());
 
-        foreach ($this as $key => $item) {
+        foreach ($callback as $key => $item) {
             if ($callback($item, $key)) {
                 $resolved[$key] = $item;
             } else {
@@ -30,6 +30,12 @@ trait Enumerator
         }
 
         return new static([new static($resolved), new static($failed)]);
+    }
+
+
+    public function toArray()
+    {
+        return $this->map(fn ($value) => $value instanceof ArrayAble ? $value->toArray() : $value)->all();
     }
 
     /**

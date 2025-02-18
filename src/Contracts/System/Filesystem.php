@@ -2,7 +2,7 @@
 
 namespace Rose\Contracts\System;
 
-interface Filesystem
+interface FileSystem
 {
     /**
      * Determine if a file or dir exists
