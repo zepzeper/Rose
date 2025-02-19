@@ -4,7 +4,6 @@ namespace Rose;
 
 use Rose\Roots\Application;
 use Rose\Routing\Router;
-use Rose\Routing\RouterParameters;
 use Symfony\Component\HttpFoundation\Request;
 
 // Include the Composer autoloader
@@ -15,14 +14,17 @@ $app = Application::configure()
 
 $router = $app->get(Router::class);
 
-$router->add('/test', '', '', function () {
-    echo 'Does this work?';
-    die;
+// Add routes within groups
+$router->group(['prefix' => 'api', 'middleware' => ['auth']], function(Router $router) {
+    $router->get('/users', 'UserController', 'index')
+        ->name('users.index');
+        
+    $router->group(['prefix' => 'admin'], function(Router $router) {
+        $router->get('/stats', 'AdminController', 'stats')
+            ->name('stats');
+    });
 });
 
-dd($router->getMiddleware());
+dd($router);
 
 $response = $app->get(\Rose\Roots\Http\Kernel::class)->handle(new Request());
-
-
-dd($response);

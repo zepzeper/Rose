@@ -3,147 +3,163 @@
 namespace Rose\Routing;
 
 use Closure;
-use InvalidArgumentException;
 use Rose\Contracts\Routing\Router as RouterContract;
+use Rose\Exceptions\Routing\RouteNotFoundException;
 
+/**
+ * The Router class handles HTTP route registration and request dispatching.
+ * It serves as the main entry point for defining application routes and
+ * matching incoming HTTP requests to their appropriate handlers.
+ */
 class Router implements RouterContract
 {
-    /** @var array Route collection */
-    protected array $routes = [];
-    
-    /** @var array Middleware groups */
-    protected array $middlewareGroups = [];
-    
-    /** @var array Global patterns for route parameters */
-    protected array $patterns = [];
-    
-    /** @var array Current group stack */
-    protected array $groupStack = [];
-    
-    /** @var array Named routes */
-    protected array $namedRoutes = [];
-    
-    /** @var string Current route name */
-    protected ?string $currentRouteName = null;
+    /**
+     * List of valid HTTP methods supported by this router.
+     * These methods align with the HTTP/1.1 specification.
+     * 
+     * @var array Valid HTTP methods 
+     */
+    protected const VALID_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
 
-    /** @var array Current route middleware */
-    protected array $currentMiddleware = [];
-
-    /** @var string|null Current domain */
-    protected ?string $currentDomain = null;
-
-    public function add(string $uri, string $controller, string $action, ?Closure $callback = null): self
+    /**
+     * Initialize a new Router instance.
+     * 
+     * @param RouteCollection $routes Collection to store and manage routes
+     */
+    public function __construct(protected RouteCollection $routes)
     {
-        if (! is_null($callback))
-        {
-            return $callback();
+    }
+
+    /**
+     * Register a new route with the router.
+     * This is the core method for adding routes to the application.
+     * 
+     * @param  string|array $methods    HTTP methods route responds to
+     * @param  string       $uri        URI pattern to match
+     * @param  string       $controller Controller class to handle the request
+     * @param  string       $action     Method within controller to call
+     * @param  Closure|null $callback   Optional configuration callback
+     * @return Route                    The newly created route instance
+     */
+    public function add($methods, string $uri, string $controller, string $action, ?Closure $callback = null): Route
+    {
+        // Create new route instance with specified attributes
+        $route = new Route($methods, $uri, $controller, $action);
+        
+        // Apply any custom configuration if callback provided
+        if ($callback) {
+            $callback($route);
         }
         
-        return $this;
+        // Register route with the collection and return it
+        $this->routes->add($route);
+        
+        return $route;
     }
 
-    public function get(string $uri, string $controller, string $action): self
+    /**
+     * Register a GET route.
+     * Shorthand method for registering routes that respond to GET requests.
+     */
+    public function get(string $uri, string $controller, string $action): Route
     {
-        return $this->addRoute('GET', $uri, $controller, $action);
+        return $this->add('GET', $uri, $controller, $action);
     }
 
-    public function post(string $uri, string $controller, string $action): self
+    /**
+     * Register a POST route.
+     * Shorthand method for registering routes that respond to POST requests.
+     */
+    public function post(string $uri, string $controller, string $action): Route
     {
-        return $this->addRoute('POST', $uri, $controller, $action);
+        return $this->add('POST', $uri, $controller, $action);
     }
 
-    public function put(string $uri, string $controller, string $action): self
+    /**
+     * Register a PUT route.
+     * Shorthand method for registering routes that respond to PUT requests.
+     */
+    public function put(string $uri, string $controller, string $action): Route
     {
-        return $this->addRoute('PUT', $uri, $controller, $action);
+        return $this->add('PUT', $uri, $controller, $action);
     }
 
-    public function patch(string $uri, string $controller, string $action): self
+    /**
+     * Register a PATCH route.
+     * Shorthand method for registering routes that respond to PATCH requests.
+     */
+    public function patch(string $uri, string $controller, string $action): Route
     {
-        return $this->addRoute('PATCH', $uri, $controller, $action);
+        return $this->add('PATCH', $uri, $controller, $action);
     }
 
-    public function delete(string $uri, string $controller, string $action): self
+    /**
+     * Register a DELETE route.
+     * Shorthand method for registering routes that respond to DELETE requests.
+     */
+    public function delete(string $uri, string $controller, string $action): Route
     {
-        return $this->addRoute('DELETE', $uri, $controller, $action);
+        return $this->add('DELETE', $uri, $controller, $action);
     }
 
-    public function name(string $name): self
-    {
-        return $this;
-    }
-
-    public function middleware(array|string $middleware): self
-    {
-        return $this;
-    }
-
-    public function middlewareGroup(string $name, array $middleware): self
-    {
-        return $this;
-    }
-
-    public function pattern(string $key, string $pattern): self
-    {
-        return $this;
-    }
-
-    public function domain(string $domain): self
-    {
-        return $this;
-    }
-
+    /**
+     * Create a route group with shared attributes.
+     * Groups allow routes to share common characteristics like:
+     * - URL prefixes
+     * - Middleware
+     * - Namespace prefixes
+     * - Name prefixes
+     * 
+     * @param  array    $attributes Shared attributes for all routes in group
+     * @param  Closure  $callback   Function that defines the group's routes
+     * @return self     For method chaining
+     */
     public function group(array $attributes, Closure $callback): self
     {
+        $this->routes->group($attributes, function() use ($callback) {
+            $callback($this);
+        });
         return $this;
     }
 
-    public function namespace(string $namespace, Closure $callback): self
+    /**
+     * Match and dispatch an incoming request to its handler.
+     * This method:
+     * 1. Validates the HTTP method
+     * 2. Finds a matching route
+     * 3. Creates the controller
+     * 4. Calls the appropriate action
+     * 
+     * @param  string $uri     The request URI to match
+     * @param  string $method  The HTTP method of the request
+     * @return mixed          The response from the route handler
+     * @throws RouteNotFoundException If no matching route is found
+     * @throws \InvalidArgumentException If the HTTP method is invalid
+     */
+    public function dispatch(string $uri, string $method)
     {
-        return $this;
-    }
+        // Convert method to uppercase for consistency
+        $method = strtoupper($method);
 
-    public function resource(string $name, string $controller): self
-    {
-        return $this;
-    }
+        // Ensure the HTTP method is valid
+        if (!in_array($method, self::VALID_METHODS)) {
+            throw new \InvalidArgumentException("Invalid HTTP method: {$method}");
+        }
 
-    public function fallback(string $controller, string $action): self
-    {
-        return $this;
-    }
+        // Find a route matching the URI and method
+        $route = $this->routes->match($uri, $method);
 
-    public function generateUrl(string $name, array $parameters = []): string
-    {
-        return '';
-    }
+        // If no route matches, throw an exception
+        if (!$route) {
+            throw new RouteNotFoundException("No route found for {$method} {$uri}");
+        }
 
-    public function dispatch(string $uri, string $method): mixed
-    {
-        return null;
-    }
+        // Get the controller and action from the matching route
+        $controller = $route->getController();
+        $action = $route->getAction();
 
-    protected function addRoute(string $method, string $uri, string $controller, string $action): self
-    {
-        return $this;
-    }
-
-    protected function getCurrentGroup(): array
-    {
-        return [];
-    }
-
-    protected function mergeWithLastGroup(array $new): array
-    {
-        return [];
-    }
-
-    protected function processMiddlewareGroups(array $middleware): array
-    {
-        return [];
-    }
-
-    protected function buildRoute(string $method, string $uri, string $controller, string $action): array
-    {
-        return [];
+        // Instantiate controller and call the action
+        $instance = new $controller();
+        return $instance->$action();
     }
 }
