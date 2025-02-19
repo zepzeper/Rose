@@ -26,9 +26,6 @@ abstract class AbstractSessionHandler implements StorageContract
             'domain' => null,
             'secure' => false,
             'http_only' => true,
-            'gc_maxlifetime' => 1440,
-            'gc_divisor' => 100,
-            'gc_probability' => 1,
         ];
     }
 

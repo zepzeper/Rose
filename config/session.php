@@ -13,7 +13,7 @@ return [
 
     'encryption_key' => Env::get('SESSION_ENCRYPTION_KEY'),
 
-    'cipher' => 'aes-256-gcm',
+    'cipher' => Env::get('SESSION_CIPHER', 'aes-256-gcm'),
 
     /**
      * Session lifetime
