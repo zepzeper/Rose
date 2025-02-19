@@ -234,8 +234,8 @@ class Container implements ContainerContract, ArrayAccess
      * Call a method with dependency injection.
      *
      * @param  callable|string $callback   Method to call.
-     * @param  array   $parameters Parameters to use.
-     * @param  string|null   $default    Fallback value if resolution fails.
+     * @param  array           $parameters Parameters to use.
+     * @param  string|null     $default    Fallback value if resolution fails.
      * @return mixed Call result or default.
      */
     public function call($callback, $parameters = [], $default = null): mixed
@@ -307,6 +307,8 @@ class Container implements ContainerContract, ArrayAccess
      */
     protected function resolve(string $abstract, array $parameters = []): mixed
     {
+        static $resolving = [];
+
         $abstract = $this->getAlias($abstract);
 
         // Return existing instance if available and no parameters
@@ -314,13 +316,22 @@ class Container implements ContainerContract, ArrayAccess
             return $this->instances[$abstract];
         }
 
+        if (isset($resolving[$abstract])) {
+            // We've already tried to resolve this - circular dependency detected
+            echo "Circular dependency detected: " . implode(" -> ", array_keys($resolving)) . " -> $abstract\n";
+            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            exit;
+        }
+
+        $resolving[$abstract] = true;
+
         // Get context-specific concrete implementation
         $concrete = $this->getContextualConcrete($abstract);
 
         $needsContextBuild = ! empty($parameters) || ! is_null($concrete);
 
-        if (isset($this->instance[$abstract]) && ! $needsContextBuild) {
-            return $this->instance[$abstract];
+        if (isset($this->instances[$abstract]) && ! $needsContextBuild) {
+            return $this->instances[$abstract];
         }
 
         // Fall back to registered concrete or abstract itself
@@ -345,6 +356,8 @@ class Container implements ContainerContract, ArrayAccess
             $this->instances[$abstract] = $object;
         }
 
+        //echo '<pre>';var_dump($object);echo'</pre>';
+        unset($resolving[$abstract]);
         return $object;
     }
 
@@ -374,7 +387,7 @@ class Container implements ContainerContract, ArrayAccess
         return $abstract;
     }
     /**
-     * @param mixed $concrete
+     * @param mixed  $concrete
      * @param string $abstract
      *
      * @return bool
@@ -418,6 +431,7 @@ class Container implements ContainerContract, ArrayAccess
 
         // Resolve constructor dependencies
         $dependencies = $constructor->getParameters();
+
         $instances = $this->resolveDependencies($dependencies, $parameters);
 
         return $reflector->newInstanceArgs($instances);
@@ -444,13 +458,16 @@ class Container implements ContainerContract, ArrayAccess
 
             $type = $dependency->getType();
 
-            // Resolve class type-hinted dependencies
             if ($type && !$type->isBuiltin()) {
-                $results[] = $this->resolve($type->getName());
+                $results[] = $this->resolve($type->getName()); // Resolve this dependency via a class or factory
             } elseif ($dependency->isDefaultValueAvailable()) {
-                // Use default value if available
-                $results[] = $dependency->getDefaultValue();
+                $results[] = $dependency->getDefaultValue();  // Use default value if available
             } else {
+                // Check if we have a binding for this dependency name
+                if ($this->bound($dependency->name)) {
+                    $results[] = $this->get($dependency->name);
+                    continue;
+                }
                 throw new RuntimeException("Unresolvable dependency: {$dependency->name}");
             }
         }

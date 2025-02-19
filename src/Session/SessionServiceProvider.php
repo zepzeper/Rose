@@ -2,36 +2,29 @@
 
 namespace Rose\Session;
 
-use Rose\Roots\Application;
-use Rose\Security\Encryption;
-use Rose\Session\Storage\NativeSessionStorage;
+use Rose\Contracts\Session\Storage as StorageContract;
+use Rose\Encryption\Encryption;
+use Rose\Security\EncryptionServiceProvider;
 use Rose\Support\ServiceProvider;
+use Rose\Session\Manager\SessionManager;
 
 class SessionServiceProvider extends ServiceProvider
 {
-    public function __construct(protected Application $app)
+    public function register(): void
     {
-    }
+        // Make sure EncryptionServiceProvider is registered first
+        if (!$this->app->bound(Encryption::class)) {
+            $this->app->register(EncryptionServiceProvider::class);
+        }
 
-    public function register()
-    {
-        $this->registerSessionManager();
-        $this->registerSessionDriver();
-    }
-
-    protected function registerSessionManager()
-    {
-        $this->app->singleton('session', function (Application $app) {
-            $encryption = $app->make(Encryption::class);
-
-            return new NativeSessionStorage($app, $encryption);
+        $this->app->singleton('session.manager', function ($app) {
+            return new SessionManager($app);
         });
-    }
 
-    protected function registerSessionDriver()
-    {
-        $this->app->singleton('session.store', function (Application $app) {
-            return $app->make('session');
+        $this->app->singleton('session', function ($app) {
+            return $app->make('session.manager')->driver();
         });
+
+        $this->app->alias('session', StorageContract::class);
     }
 }

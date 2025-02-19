@@ -15,8 +15,6 @@ return [
 
     'timezone' => env('APP_TIMEZONE', 'UTC'),
 
-    'key' => env('APP_KEY'),
-
     'cipher' => 'aes-256-gcm',
 
     /**

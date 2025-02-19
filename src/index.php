@@ -2,6 +2,7 @@
 
 namespace Rose;
 
+use Rose\Contracts\Session\Storage as SessionContract;
 use Rose\Roots\Application;
 
 // Include the Composer autoloader
@@ -12,8 +13,7 @@ $app = Application::configure()
 
 $app->make(\Rose\Roots\Http\Kernel::class);
 
-dd($app);
+$session = $app->get(SessionContract::class);
 
-$session = $app->make('session');
-
-
+$session->set('preferences', ['theme' => 'dark']);
+$session->set('preferences', ['theme' => 'dark']);
