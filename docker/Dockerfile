@@ -3,8 +3,12 @@ FROM php:8.2-apache
 # Set the working directory in the container
 WORKDIR /var/www/html
 
-RUN apt-get update
-RUN apt install -y vim systemctl unzip git
+# Combine system updates and installations
+RUN apt-get update && apt-get install -y \
+    vim \
+    systemctl \
+    gettext-base \
+    && rm -rf /var/lib/apt/lists/*
 
 # XDEBUG
 RUN pecl install xdebug \
@@ -19,25 +23,37 @@ RUN echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.
 
 # Install necessary PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql
-
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Enable Apache rewrite module (useful for routing in frameworks)
+# Set up logging
+RUN rm -f /var/log/apache2/access.log /var/log/apache2/error.log \
+    && touch /var/log/apache2/access.log /var/log/apache2/error.log \
+    && chown www-data:www-data /var/log/apache2/access.log /var/log/apache2/error.log \
+    && chmod 640 /var/log/apache2/access.log /var/log/apache2/error.log
+
+# Enable Apache modules
 RUN a2enmod rewrite
 
-# Set the Apache document root to /var/www/html/src
-ENV APACHE_DOCUMENT_ROOT /var/www/html/src
+# Set the Apache document root
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/src
 
-# Update the Apache configuration
-RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf
-RUN sed -ri -e "s!/var/www/!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Copy and process the custom Apache configuration
+COPY ./docker/000-default.conf /etc/apache2/sites-available/
 
-# Copy your application files into the container
+RUN a2enmod rewrite
+RUN envsubst < /etc/apache2/sites-available/000-default.conf > /etc/apache2/sites-available/000-default.conf.tmp \
+    && mv /etc/apache2/sites-available/000-default.conf.tmp /etc/apache2/sites-available/000-default.conf
+
+# Remove the default site and enable our custom one
+RUN a2dissite 000-default
+RUN a2ensite 000-default
+
+# Copy your application files
 COPY ./src /var/www/html
 
-# Set correct permissions for the src directory
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 755 /var/www/html
+# Set correct permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
 
-# Expose port 80 for Apache
+# Expose port 80
 EXPOSE 80

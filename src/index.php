@@ -4,13 +4,20 @@ namespace Rose;
 
 use Rose\Roots\Application;
 use Rose\Routing\Router;
-use Symfony\Component\HttpFoundation\Request;
 
 // Include the Composer autoloader
 require __DIR__ . '/../vendor/autoload.php';
 
 $app = Application::configure()
+    ->withKernels()
+    ->withProviders()
     ->create();
+
+$kernel = $app->get(\Rose\Roots\Http\Kernel::class);
+
+
+$request = \Symfony\Component\HttpFoundation\Request::createFromGlobals();
+
 
 $router = $app->get(Router::class);
 
@@ -25,6 +32,17 @@ $router->group(['prefix' => 'api', 'middleware' => ['auth']], function(Router $r
     });
 });
 
-dd($router);
+$router->get('/', 'TestController', 'aboeba', function (Router $router) {
+    echo 'Werk dit ook?';
+});
 
-$response = $app->get(\Rose\Roots\Http\Kernel::class)->handle(new Request());
+
+$response = $kernel->handle($request);
+
+$session = $app->get('session');
+
+dd($session);
+
+$kernel->emit($response);
+
+

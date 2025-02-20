@@ -12,8 +12,13 @@ use RuntimeException;
 use stdClass;
 
 /**
- * Inversion of Control (IoC) Container implementation for dependency management.
- * Supports binding, singleton, contextual binding, method injection, and event hooks.
+ * The Container class is the heart of your framework's dependency injection system.
+ * It serves as a smart factory that knows how to:
+ * 1. Store building instructions (bindings)
+ * 2. Create objects (resolution)
+ * 3. Share objects (singletons)
+ * 4. Modify objects after creation (extending)
+ * 5. Handle special cases (contextual binding)
  */
 class Container implements ContainerContract, ArrayAccess
 {

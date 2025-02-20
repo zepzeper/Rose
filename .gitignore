@@ -3,6 +3,8 @@ composer.lock
 .env
 .php-cs-fixer.cache
 .phpunit.cache
+.htaccess
+application.log
 
 # macOS system files
 **/.DS_Store

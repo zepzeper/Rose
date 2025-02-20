@@ -2,11 +2,14 @@
 
 namespace Rose\Events;
 
+use InvalidArgumentException;
+use Closure;
 use Rose\Contracts\Container\Container as ContainerContract;
 use Rose\Contracts\Events\Dispatcher as DispatcherContract;
 use Rose\Support\Album\Arr;
 use ReflectionClass;
 use ReflectionMethod;
+use Rose\Support\Str;
 
 class Dispatcher implements DispatcherContract
 {
@@ -79,7 +82,7 @@ class Dispatcher implements DispatcherContract
     {
         if ($events instanceof Closure) {
             // Register closure as wildcard listener
-            return $this->listen('*', $events);
+            $this->listen('*', $events);
         }
 
         foreach ((array) $events as $event) {

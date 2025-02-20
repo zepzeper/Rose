@@ -61,8 +61,9 @@ class Router implements RouterContract
      * Register a GET route.
      * Shorthand method for registering routes that respond to GET requests.
      */
-    public function get(string $uri, string $controller, string $action): Route
+    public function get(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
+        $this->resolve($callback);
         return $this->add('GET', $uri, $controller, $action);
     }
 
@@ -70,8 +71,9 @@ class Router implements RouterContract
      * Register a POST route.
      * Shorthand method for registering routes that respond to POST requests.
      */
-    public function post(string $uri, string $controller, string $action): Route
+    public function post(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
+        $this->resolve($callback);
         return $this->add('POST', $uri, $controller, $action);
     }
 
@@ -79,8 +81,9 @@ class Router implements RouterContract
      * Register a PUT route.
      * Shorthand method for registering routes that respond to PUT requests.
      */
-    public function put(string $uri, string $controller, string $action): Route
+    public function put(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
+        $this->resolve($callback);
         return $this->add('PUT', $uri, $controller, $action);
     }
 
@@ -88,8 +91,9 @@ class Router implements RouterContract
      * Register a PATCH route.
      * Shorthand method for registering routes that respond to PATCH requests.
      */
-    public function patch(string $uri, string $controller, string $action): Route
+    public function patch(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
+        $this->resolve($callback);
         return $this->add('PATCH', $uri, $controller, $action);
     }
 
@@ -97,9 +101,17 @@ class Router implements RouterContract
      * Register a DELETE route.
      * Shorthand method for registering routes that respond to DELETE requests.
      */
-    public function delete(string $uri, string $controller, string $action): Route
+    public function delete(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
+        $this->resolve($callback);
         return $this->add('DELETE', $uri, $controller, $action);
+    }
+
+    protected function resolve(?Closure $callback): void
+    {
+        if (! is_null($callback)) {
+            $callback($this);
+        }
     }
 
     /**
@@ -110,15 +122,18 @@ class Router implements RouterContract
      * - Namespace prefixes
      * - Name prefixes
      * 
-     * @param  array    $attributes Shared attributes for all routes in group
-     * @param  Closure  $callback   Function that defines the group's routes
+     * @param  array   $attributes Shared attributes for all routes in group
+     * @param  Closure $callback   Function that defines the group's routes
      * @return self     For method chaining
      */
     public function group(array $attributes, Closure $callback): self
     {
-        $this->routes->group($attributes, function() use ($callback) {
-            $callback($this);
-        });
+        $this->routes->group(
+            $attributes, function () use ($callback) {
+                $callback($this);
+            }
+        );
+
         return $this;
     }
 
@@ -130,36 +145,43 @@ class Router implements RouterContract
      * 3. Creates the controller
      * 4. Calls the appropriate action
      * 
-     * @param  string $uri     The request URI to match
-     * @param  string $method  The HTTP method of the request
+     * @param  string $uri    The request URI to match
+     * @param  string $method The HTTP method of the request
      * @return mixed          The response from the route handler
      * @throws RouteNotFoundException If no matching route is found
      * @throws \InvalidArgumentException If the HTTP method is invalid
      */
     public function dispatch(string $uri, string $method)
     {
-        // Convert method to uppercase for consistency
-        $method = strtoupper($method);
 
-        // Ensure the HTTP method is valid
-        if (!in_array($method, self::VALID_METHODS)) {
-            throw new \InvalidArgumentException("Invalid HTTP method: {$method}");
-        }
+        $uri = $this->normalizeUri($uri);
 
-        // Find a route matching the URI and method
+        // Find a matching route
         $route = $this->routes->match($uri, $method);
 
-        // If no route matches, throw an exception
         if (!$route) {
             throw new RouteNotFoundException("No route found for {$method} {$uri}");
         }
 
-        // Get the controller and action from the matching route
+        // Get the controller and action
         $controller = $route->getController();
         $action = $route->getAction();
 
-        // Instantiate controller and call the action
-        $instance = new $controller();
-        return $instance->$action();
+        // Get any route parameters that were captured
+        $parameters = $route->getParameters();
+
+        // Create controller instance
+        $instance = $this->container->make($controller);
+
+        // Call the action with parameters
+        return $this->container->call([$instance, $action], $parameters);
+    }
+
+    /**
+     * Clean up the URI for consistent matching.
+     */
+    protected function normalizeUri(string $uri): string
+    {
+        return '/' . trim($uri, '/');
     }
 }

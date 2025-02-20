@@ -3,7 +3,6 @@
 namespace Rose\Encryption;
 
 use PhpOption\Option;
-use PhpOption\Some;
 use Rose\Exceptions\Encryption\MissingAppKeyException;
 use Rose\Support\ServiceProvider;
 use Rose\Support\Str;

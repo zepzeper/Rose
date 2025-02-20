@@ -9,11 +9,11 @@ interface Router
 {
     // Core routing methods
     public function add(string|array $methods, string $uri, string $controller, string $action, ?Closure $callback = null): Route;
-    public function get(string $uri, string $controller, string $action): Route;
-    public function post(string $uri, string $controller, string $action): Route;
-    public function put(string $uri, string $controller, string $action): Route;
-    public function patch(string $uri, string $controller, string $action): Route;
-    public function delete(string $uri, string $controller, string $action): Route;
+    public function get(string $uri, string $controller, string $action, ?Closure $callback = null): Route;
+    public function post(string $uri, string $controller, string $action, ?Closure $callback = null): Route;
+    public function put(string $uri, string $controller, string $action, ?Closure $callback = null): Route;
+    public function patch(string $uri, string $controller, string $action, ?Closure $callback = null): Route;
+    public function delete(string $uri, string $controller, string $action, ?Closure $callback = null): Route;
     
     // Route organization
     public function group(array $attributes, Closure $callback): self;

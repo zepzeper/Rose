@@ -52,7 +52,7 @@ class Route implements RouteContract
      * Assign middleware to the route.
      * Middleware provide a mechanism to filter HTTP requests entering your application.
      * 
-     * @param string|array $middleware Single middleware or array of middleware
+     * @param  string|array $middleware Single middleware or array of middleware
      * @return self For method chaining
      */
     public function middleware($middleware): self
@@ -70,7 +70,7 @@ class Route implements RouteContract
      * Named routes allow you to perform URL generation or redirects
      * without being coupled to specific URLs.
      * 
-     * @param string $name The name to assign to this route
+     * @param  string $name The name to assign to this route
      * @return self For method chaining
      */
     public function name(string $name): self
@@ -92,7 +92,7 @@ class Route implements RouteContract
      * Set a domain constraint for the route.
      * This allows you to handle subdomains or specific domains differently.
      * 
-     * @param string $domain Domain pattern to match
+     * @param  string $domain Domain pattern to match
      * @return self For method chaining
      */
     public function domain(string $domain): self
@@ -105,8 +105,8 @@ class Route implements RouteContract
      * Add a regular expression constraint for a route parameter.
      * This allows you to ensure parameters match specific patterns.
      * 
-     * @param string $parameter Name of the parameter to constrain
-     * @param string $pattern   Regular expression pattern to match
+     * @param  string $parameter Name of the parameter to constrain
+     * @param  string $pattern   Regular expression pattern to match
      * @return self For method chaining
      */
     public function where(string $parameter, string $pattern): self
@@ -119,7 +119,7 @@ class Route implements RouteContract
      * Set a URL prefix for the route.
      * This is commonly used when routes are part of a group.
      * 
-     * @param string $prefix The URL prefix to add
+     * @param  string $prefix The URL prefix to add
      * @return self For method chaining
      */
     public function prefix(string $prefix)
@@ -132,7 +132,7 @@ class Route implements RouteContract
      * Associate this route with a RouteCollection.
      * This enables the route to update the collection when its attributes change.
      * 
-     * @param RouteCollection $collection The collection this route belongs to
+     * @param  RouteCollection $collection The collection this route belongs to
      * @return self For method chaining
      */
     public function setCollection(RouteCollection $collection): self
@@ -148,6 +148,7 @@ class Route implements RouteContract
     
     /**
      * Get the HTTP methods this route responds to.
+     *
      * @return array Array of HTTP methods
      */
     public function getMethods(): array
@@ -157,6 +158,7 @@ class Route implements RouteContract
 
     /**
      * Get the route's URI pattern.
+     *
      * @return string The URI pattern
      */
     public function getUri(): string
@@ -166,6 +168,7 @@ class Route implements RouteContract
 
     /**
      * Get the controller class that handles this route.
+     *
      * @return string The controller class name
      */
     public function getController(): string
@@ -175,6 +178,7 @@ class Route implements RouteContract
 
     /**
      * Get the controller action method.
+     *
      * @return string The action method name
      */
     public function getAction(): string
@@ -184,6 +188,7 @@ class Route implements RouteContract
 
     /**
      * Get the route's name if one has been assigned.
+     *
      * @return string|null The route name or null if unnamed
      */
     public function getName(): ?string
@@ -193,10 +198,60 @@ class Route implements RouteContract
 
     /**
      * Get any parameters captured from the URI.
+     *
      * @return array Array of captured parameters
      */
     public function getParameters(): array
     {
         return $this->parameters;
+    }
+
+    /**
+     * Check if this route matches the given URI and method.
+     * This handles both simple routes and routes with parameters.
+     */
+    public function matches(string $uri, string $method): bool
+    {
+        // Check if the HTTP method matches
+        if (!in_array(strtoupper($method), array_map('strtoupper', $this->methods))) {
+            return false;
+        }
+
+        // Get the full URI pattern including any prefix
+        $pattern = $this->getFullPattern();
+
+        // Attempt to match the URI and capture any parameters
+        if (preg_match($pattern, $uri, $matches)) {
+            // Store any captured parameters
+            foreach ($matches as $key => $value) {
+                if (is_string($key)) {
+                    $this->parameters[$key] = $value;
+                }
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Generate the full regex pattern for this route.
+     */
+    protected function getFullPattern(): string
+    {
+        // Start with the route's URI
+        $uri = $this->prefix ? trim($this->prefix, '/') . '/' . trim($this->uri, '/') : trim($this->uri, '/');
+        $uri = '/' . $uri;
+
+        // Convert route parameters to regex patterns
+        $pattern = preg_replace('/\{([a-zA-Z]+)\}/', '(?P<$1>[^/]+)', $uri);
+
+        // Apply any custom parameter patterns
+        foreach ($this->where as $param => $customPattern) {
+            $pattern = str_replace("(?P<{$param}>[^/]+)", "(?P<{$param}>{$customPattern})", $pattern);
+        }
+
+        // Add start and end delimiters
+        return '#^' . $pattern . '$#';
     }
 }
