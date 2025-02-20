@@ -72,7 +72,9 @@ class Kernel implements KernelContract
      *
      * @var array
      */
-    protected array $middleware = [];
+    protected array $middleware = [
+        \Rose\Routing\Middleware\XXSProtection::class
+    ];
 
     /**
      * Named groups of middleware.
@@ -145,7 +147,6 @@ class Kernel implements KernelContract
             // Process the request through the router
             $response = $this->forwardToRouter($request);
 
-
             // Add security and debugging headers
             $this->addGlobalheaders($response);
         } catch (Throwable $e) {
@@ -214,7 +215,7 @@ class Kernel implements KernelContract
     protected function forwardToRouter(Request $request)
     {
         // Configure global middleware
-        //$this->router->middleware($this->middleware);
+        $this->router->setMiddleware($this->middleware);
 
         // Set up middleware groups
         /*foreach ($this->middlewareGroups as $group => $middleware) {*/

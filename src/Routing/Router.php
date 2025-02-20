@@ -26,6 +26,22 @@ class Router implements RouterContract
     protected ?Container $container;
 
     /**
+     * All of middlewares.
+     *
+     * @var array
+     */
+    protected $middleware = [
+    ];
+
+    /**
+     * All of the middleware groups.
+     *
+     * @var array
+     */
+    protected $middlewareGroups = [
+    ];
+
+    /**
      * Initialize a new Router instance.
      * 
      * @param Dispatcher $events Dispatcher to resolve events
@@ -145,6 +161,20 @@ class Router implements RouterContract
     }
 
     /**
+     *
+     * @param array $middleware
+     * @return void
+     */
+    public function setMiddleware(array $middleware): void
+    {
+        $this->middleware = $middleware;
+    }
+
+    public function setMiddlewareGroup($group, $middleware)
+    {
+    }
+
+    /**
      * Match and dispatch an incoming request to its handler.
      * This method:
      * 1. Validates the HTTP method
@@ -196,7 +226,7 @@ class Router implements RouterContract
     /**
     * @return RouteCollection
     */
-    public function getRoutes()
+    public function getRoutes(): RouteCollection
     {
         return $this->routes;
     }
