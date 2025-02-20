@@ -145,6 +145,7 @@ class Kernel implements KernelContract
             // Process the request through the router
             $response = $this->forwardToRouter($request);
 
+
             // Add security and debugging headers
             $this->addGlobalheaders($response);
         } catch (Throwable $e) {
