@@ -2,8 +2,11 @@
 
 namespace Rose\Roots\Configuration;
 
+use Closure;
 use Rose\Roots\Application;
 use Rose\Roots\Bootstrap\RegisterProviders;
+use Rose\Routing\Router;
+use Rose\Support\Providers\RouteServiceProvider;
 
 /**
  * The ApplicationBuilder class provides a fluent interface for configuring and bootstrapping
@@ -94,6 +97,46 @@ class ApplicationBuilder
                 : null
         );
         return $this;
+    }
+
+    /**
+     * Register RouteServiceProvider for the application.
+     *
+     * @param Closure|null $routesCallback;
+     * @param array|string|null $web;
+     * @return $this
+     */
+    public function withRouting(?Closure $routesCallback = null, array|string|null $web = null): ApplicationBuilder
+    {
+        if (is_string($web))
+        {
+            $routesCallback = $this->buildRoutingCallback($web);
+        }
+
+        RouteServiceProvider::loadRoutesUsing($routesCallback);
+
+        $this->app->booting(function() {
+            $this->app->register(RouteServiceProvider::class, true);
+        });
+
+        return $this;
+    }
+
+    protected function buildRoutingCallback(string $web): void
+    {
+        $this->app->booting(function() use ($web) {
+            if (file_exists($web))
+            {
+                $routesCallback = require $web;
+                if (is_callable($routesCallback))
+                {
+                    // Pass the router instead of $this
+                    $routesCallback($this->app->get(Router::class));
+                    
+                    $routes = $this->app->get(Router::class)->getRoutes(); // Assuming you have a getRoutes() method
+                }
+            }
+        });
     }
 
     /**

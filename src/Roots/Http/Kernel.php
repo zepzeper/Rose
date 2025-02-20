@@ -152,6 +152,7 @@ class Kernel implements KernelContract
             $response = $this->handleException($request, $e);
         }
 
+
         return $response;
     }
 
@@ -179,12 +180,24 @@ class Kernel implements KernelContract
      * Send the response to the client.
      * This method finalizes the response and sends it to the web server.
      * 
-     * @param Response $response The response to send
-     * @return mixed The sent response
+     * @param Response $response
+     * @return Response
      */
-    public function emit(Response $response)
+    public function emit(Response $response): Response
     {
         return $response->send();
+    }
+
+    /*
+     * Perform any last action for the lifecycle of the request
+     *
+     * @param Request $request The HTTP request to process
+     * @param Response $response
+     * @return void
+     */
+    public function terminate(Request $request, Response $response): void
+    {
+        // TODO: Do some termination here or something...
     }
 
     /**
@@ -203,11 +216,11 @@ class Kernel implements KernelContract
         //$this->router->middleware($this->middleware);
 
         // Set up middleware groups
-        foreach ($this->middlewareGroups as $group => $middleware) {
-            $this->router->middlewareGroup($group, $middleware);
-        }
+        /*foreach ($this->middlewareGroups as $group => $middleware) {*/
+        /*    $this->router->middlewareGroup($group, $middleware);*/
+        /*}*/
 
-        return $this->router->dispatch($request->getRequestUri(), $request->getMethod());
+        return $this->router->dispatch($request->getPathInfo(), $request->getMethod());
     }
 
     /**

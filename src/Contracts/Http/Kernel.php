@@ -25,11 +25,17 @@ interface Kernel
     /**
      * Latest actions before sending the request to the client.
      *
-     * @param Request $request
+     * @param Response $response
      * @return Response
      */
-    /*public function emit(Request $request): Response;*/
+    public function emit(Response $response): Response;
 
-
-
+    /*
+     * Perform any last action for the lifecycle of the request
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
+    public function terminate(Request $request, Response $response): void;
 }

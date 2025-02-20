@@ -1,8 +1,9 @@
 <?php
 
-namespace Rose\Encryption;
+namespace Rose\Support\Providers;
 
 use PhpOption\Option;
+use Rose\Encryption\Encryption;
 use Rose\Exceptions\Encryption\MissingAppKeyException;
 use Rose\Support\ServiceProvider;
 use Rose\Support\Str;
@@ -41,7 +42,7 @@ class EncryptionServiceProvider extends ServiceProvider
         });
 
         // Register encryptor alias
-        $this->app->alias(Encryption::class, 'encryptor');
+        $this->app->alias('encryptor', Encryption::class);
     }
 
     /**

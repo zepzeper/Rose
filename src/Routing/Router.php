@@ -3,8 +3,11 @@
 namespace Rose\Routing;
 
 use Closure;
+use Rose\Container\Container;
 use Rose\Contracts\Routing\Router as RouterContract;
+use Rose\Events\Dispatcher;
 use Rose\Exceptions\Routing\RouteNotFoundException;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The Router class handles HTTP route registration and request dispatching.
@@ -20,14 +23,18 @@ class Router implements RouterContract
      * @var array Valid HTTP methods 
      */
     protected const VALID_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
+    protected ?Container $container;
 
     /**
      * Initialize a new Router instance.
      * 
+     * @param Dispatcher $events Dispatcher to resolve events
      * @param RouteCollection $routes Collection to store and manage routes
+     * @param Collection $container Application container
      */
-    public function __construct(protected RouteCollection $routes)
+    public function __construct(protected Dispatcher $events, protected RouteCollection $routes, ?Container $container = null)
     {
+        $this->container = $container ?: new Container;
     }
 
     /**
@@ -153,7 +160,6 @@ class Router implements RouterContract
      */
     public function dispatch(string $uri, string $method)
     {
-
         $uri = $this->normalizeUri($uri);
 
         // Find a matching route
@@ -174,7 +180,9 @@ class Router implements RouterContract
         $instance = $this->container->make($controller);
 
         // Call the action with parameters
-        return $this->container->call([$instance, $action], $parameters);
+        $response = $this->container->call([$instance, $action], $parameters);
+
+        return new Response($response, 200);
     }
 
     /**
@@ -183,5 +191,13 @@ class Router implements RouterContract
     protected function normalizeUri(string $uri): string
     {
         return '/' . trim($uri, '/');
+    }
+
+    /**
+    * @return RouteCollection
+    */
+    public function getRoutes()
+    {
+        return $this->routes;
     }
 }

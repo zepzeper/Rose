@@ -1,10 +1,9 @@
 <?php
 
-namespace Rose\Session;
+namespace Rose\Support\Providers;
 
 use Rose\Contracts\Session\Storage as StorageContract;
 use Rose\Encryption\Encryption;
-use Rose\Security\EncryptionServiceProvider;
 use Rose\Support\ServiceProvider;
 use Rose\Session\Manager\SessionManager;
 

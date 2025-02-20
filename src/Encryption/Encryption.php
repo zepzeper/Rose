@@ -3,7 +3,7 @@
 namespace Rose\Encryption;
 
 use Exception;
-use Rose\Exception\Encryption\EncryptionFailureException;
+use Rose\Exceptions\Encryption\EncryptionFailureException;
 use RuntimeException;
 
 class Encryption

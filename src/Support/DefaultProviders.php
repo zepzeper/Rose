@@ -12,8 +12,9 @@ class DefaultProviders
     public function __construct(?array $providers = null)
     {
         $this->providers = $providers ?: [
-            \Rose\Encryption\EncryptionServiceProvider::class,
-            \Rose\Session\SessionServiceProvider::class,
+            \Rose\Support\Providers\EncryptionServiceProvider::class,
+            \Rose\Support\Providers\SessionServiceProvider::class,
+            \Rose\Support\Providers\RouteServiceProvider::class,
         ];
     }
 

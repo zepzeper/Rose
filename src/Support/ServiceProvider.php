@@ -2,6 +2,7 @@
 
 namespace Rose\Support;
 
+use Closure;
 use Rose\Roots\Application;
 use RuntimeException;
 
@@ -10,6 +11,12 @@ abstract class ServiceProvider
     protected Application $app;
 
     protected array $publishes = [];
+
+    /*
+     *
+     */
+    protected array $bootingProviders = [];
+    protected array $bootedProviders = [];
 
     /**
      * @param Application $app
@@ -92,6 +99,50 @@ abstract class ServiceProvider
     {
         if (!array_key_exists($group, $this->publishes)) {
             $this->publishes[$group] = [];
+        }
+    }
+
+    /**
+     * Register a booting callback to be run before the "boot" method is called.
+     *
+     * @param  Closure  $callback
+     * @return void
+     */
+    public function booting(Closure $callback): void
+    {
+        $this->bootingProviders[] = $callback;
+    }
+
+    /**
+     * Register a booted callback to be run after the "boot" method is called.
+     *
+     * @param  Closure  $callback
+     * @return void
+     */
+    public function booted(Closure $callback): void
+    {
+        $this->bootedProviders[] = $callback;
+    }
+
+    public function callBootingCallbacks()
+    {
+        $count = 0;
+
+        while($count < count($this->bootingProviders))
+        {
+            $this->app->call($this->bootingProviders[$count]);
+            $count++;
+        }
+    }
+
+    public function callBootedCallbacks()
+    {
+        $count = 0;
+
+        while($count < count($this->bootedProviders))
+        {
+            $this->app->call($this->bootedProviders[$count]);
+            $count++;
         }
     }
 

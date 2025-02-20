@@ -7,6 +7,7 @@ use Closure;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
+use ReflectionMethod;
 use Rose\Contracts\Container\Container as ContainerContract;
 use RuntimeException;
 use stdClass;
@@ -246,6 +247,10 @@ class Container implements ContainerContract, ArrayAccess
     public function call($callback, $parameters = [], $default = null): mixed
     {
         try {
+            if (is_array($callback)) {
+                [$instance, $method] = $callback;
+                return $instance->$method(...$this->resolveMethodDependencies($callback, $parameters));
+            }
             return $callback(...$this->resolveMethodDependencies($callback, $parameters));
         } catch (\Throwable $e) {
             return $default instanceof Closure ? $default() : $default;
@@ -361,7 +366,6 @@ class Container implements ContainerContract, ArrayAccess
             $this->instances[$abstract] = $object;
         }
 
-        //echo '<pre>';var_dump($object);echo'</pre>';
         unset($resolving[$abstract]);
         return $object;
     }
@@ -415,6 +419,11 @@ class Container implements ContainerContract, ArrayAccess
         // If concrete is a Closure, execute it
         if ($concrete instanceof Closure) {
             return $concrete($this, $parameters);
+        }
+
+        if ($concrete == '')
+        {
+            return null;
         }
 
         try {
@@ -483,16 +492,21 @@ class Container implements ContainerContract, ArrayAccess
     /**
      * Resolve method dependencies for a callback.
      *
-     * @param  Closure $callback   Callback to analyze.
+     * @param  callable $callback   Callback to analyze.
      * @param  array   $parameters Provided parameters.
      * @return array Resolved parameters.
      * @throws RuntimeException If parameter cannot be resolved.
      */
-    protected function resolveMethodDependencies(Closure $callback, array $parameters): array
+    protected function resolveMethodDependencies(callable $callback, array $parameters): array
     {
-        $reflector = new ReflectionFunction($callback);
-        $dependencies = [];
+        // If it's an array callback (like [$instance, $method])
+        if (is_array($callback)) {
+            $reflector = new ReflectionMethod($callback[0], $callback[1]);
+        } else {
+            $reflector = new ReflectionFunction($callback);
+        }
 
+        $dependencies = [];
         foreach ($reflector->getParameters() as $parameter) {
             if (array_key_exists($parameter->name, $parameters)) {
                 $dependencies[] = $parameters[$parameter->name];

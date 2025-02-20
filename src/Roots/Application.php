@@ -5,14 +5,16 @@ namespace Rose\Roots;
 use Closure;
 use Composer\Autoload\ClassLoader;
 use Rose\Container\Container;
+use Rose\Contracts\Http\Kernel;
 use Rose\Contracts\Roots\Application as ApplicationContract;
 use Rose\Events\EventServiceProvider;
-use Rose\Roots\Bootstrap\RegisterProviders;
 use Rose\Roots\Configuration\ApplicationBuilder;
-use Rose\Session\SessionServiceProvider;
+use Rose\Routing\RouterServiceProvider;
+use Rose\Support\Providers\RouteServiceProvider;
 use Rose\Support\Album\Collection;
 use Rose\Support\ServiceProvider;
 use Rose\System\FileSystem;
+use Symfony\Component\HttpFoundation\Request;
 use Whoops\Handler\PrettyPageHandler;
 use Whoops\Run;
 
@@ -80,6 +82,12 @@ class Application extends Container implements ApplicationContract
     private bool $hasBeenBootstrapped = false;
     private bool $booted = false;
 
+    /*
+     *
+     */
+    protected array $bootingCallbacks = [];
+    protected array $bootedCallbacks = [];
+
     /**
      * Initialize a new application instance.
      * 
@@ -116,6 +124,8 @@ class Application extends Container implements ApplicationContract
             return;
         }
 
+        $this->fireBootCallbacks($this->bootingCallbacks);
+
         // Boot each service provider
         array_walk(
             $this->serviceProviders,
@@ -124,20 +134,67 @@ class Application extends Container implements ApplicationContract
             }
         );
 
+        $this->fireBootCallbacks($this->bootedCallbacks);
+
         $this->booted = true;
+    }
+
+    protected function fireBootCallbacks(array &$callbacks)
+    {
+        $count = 0;
+
+        while ($count < count($callbacks))
+        {
+            $callbacks[$count]($this);
+            $count++;
+        }
     }
 
     protected function bootProvider(ServiceProvider $provider)
     {
+        $provider->callBootingCallbacks();
+
         if (method_exists($provider, 'boot')) {
             $this->call([$provider, 'boot']);
         }
 
+        $provider->callBootedCallbacks();
     }
 
     public function isBooted()
     {
         return $this->booted;
+    }
+
+    public function booting(callable $callback)
+    {
+        $this->bootingCallbacks[] = $callback;
+    }
+
+    public function booted(callable $callback)
+    {
+        $this->bootedCallbacks[] = $callback;
+
+        if ($this->isBooted())
+        {
+            $callback($this);
+        }
+
+    }
+
+    /**
+     * Handle the incoming HTTP request and send the response to the browser.
+     *
+     * @param  Request  $request
+     * @return void
+     */
+    public function handleRequest(Request $request): void
+    {
+        $kernel = $this->make(Kernel::class);
+
+        $response = $kernel->handle($request)->send();
+
+        $kernel->terminate($request, $response);
     }
 
     /**
@@ -352,8 +409,9 @@ class Application extends Container implements ApplicationContract
 
     protected function registerBaseServiceProviders(): void
     {
-        $this->register(new EventServiceProvider($this));
         $this->registerErrorHandler();
+        $this->register(new EventServiceProvider($this));
+        $this->register(new RouterServiceProvider($this));
     }
 
     // Region: Configuration
@@ -377,7 +435,7 @@ class Application extends Container implements ApplicationContract
         return $this->environmentFile;
     }
 
-    public function detectEnviroment(Closure $callback = null)
+    public function detectEnviroment(?Closure $callback = null)
     {
 
     }
@@ -430,17 +488,18 @@ class Application extends Container implements ApplicationContract
      */
     protected function registerCoreContainerAliases(): void
     {
-        $aliases = [
-            // 'app' can be referenced by multiple class names
+        $aliasesArray = [
             'app' => [self::class, Container::class, Application::class],
             'events' => [\Rose\Events\Dispatcher::class, \Rose\Contracts\Events\Dispatcher::class],
-            'encrypter' => [\Rose\Encryption\EncryptionServiceProvider::class],
+            'encrypter' => [\Rose\Encryption\Encryption::class],
+            'router' => [\Rose\Routing\Router::class, \Rose\Contracts\Routing\Router::class],
             'session' => [\Rose\Session\Manager\SessionManager::class],
+            'session.store' => [\Rose\Session\Storage\NativeSessionHandler::class, \Rose\Session\Storage\AbstractSessionHandler::class],
         ];
 
         // Register each alias
-        foreach ($aliases as $key => $targets) {
-            foreach ($targets as $alias) {
+        foreach ($aliasesArray as $key => $alias) {
+            foreach ($alias as $alias) {
                 $this->alias($key, $alias);
             }
         }
@@ -452,7 +511,7 @@ class Application extends Container implements ApplicationContract
      * @param  string $provider
      * @return \Rose\Support\ServiceProvider
      */
-    public function resolveProvider($provider)
+    public function resolveProvider($provider): ServiceProvider
     {
         return new $provider($this);
     }

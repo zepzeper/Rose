@@ -35,7 +35,7 @@ RUN rm -f /var/log/apache2/access.log /var/log/apache2/error.log \
 RUN a2enmod rewrite
 
 # Set the Apache document root
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/src
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 # Copy and process the custom Apache configuration
 COPY ./docker/000-default.conf /etc/apache2/sites-available/
@@ -49,7 +49,7 @@ RUN a2dissite 000-default
 RUN a2ensite 000-default
 
 # Copy your application files
-COPY ./src /var/www/html
+COPY ./public /var/www/html
 
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html \
