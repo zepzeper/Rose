@@ -73,7 +73,6 @@ class Kernel implements KernelContract
      * @var array
      */
     protected array $middleware = [
-        \Rose\Routing\Middleware\XXSProtection::class
     ];
 
     /**
@@ -134,25 +133,20 @@ class Kernel implements KernelContract
      */
     public function handle(Request $request): Response
     {
-        try {
-            // Start timing the request for performance monitoring
-            $this->requestStartTime = Carbon::now();
+        // Start timing the request for performance monitoring
+        $this->requestStartTime = Carbon::now();
 
-            // Prepare the application
-            $this->bootstrap();
+        // Prepare the application
+        $this->bootstrap();
 
-            // Make the request available in the service container
-            $this->app->instance('request', $request);
+        // Make the request available in the service container
+        $this->app->instance('request', $request);
 
-            // Process the request through the router
-            $response = $this->forwardToRouter($request);
+        // Process the request through the router
+        $response = $this->forwardToRouter($request);
 
-            // Add security and debugging headers
-            $this->addGlobalheaders($response);
-        } catch (Throwable $e) {
-            // Convert any errors to HTTP responses
-            $response = $this->handleException($request, $e);
-        }
+        // Add security and debugging headers
+        $this->addGlobalheaders($response);
 
 
         return $response;
@@ -242,6 +236,7 @@ class Kernel implements KernelContract
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-XXS-PROTECTION', '1; mode=block');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
+
 
         // Performance monitoring header
         if ($this->requestStartTime) {

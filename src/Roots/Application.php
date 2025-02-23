@@ -9,10 +9,12 @@ use Rose\Contracts\Http\Kernel;
 use Rose\Contracts\Roots\Application as ApplicationContract;
 use Rose\Events\EventServiceProvider;
 use Rose\Roots\Configuration\ApplicationBuilder;
+use Rose\Roots\System\PackageManifest;
 use Rose\Routing\RouterServiceProvider;
-use Rose\Support\Providers\RouteServiceProvider;
 use Rose\Support\Album\Collection;
 use Rose\Support\ServiceProvider;
+use Rose\Support\Str;
+use Rose\Support\Env;
 use Rose\System\FileSystem;
 use Symfony\Component\HttpFoundation\Request;
 use Whoops\Handler\PrettyPageHandler;
@@ -36,7 +38,7 @@ use Whoops\Run;
 
 class Application extends Container implements ApplicationContract
 {
-    /** 
+    /**
      * The current framework version. Using semantic versioning to track releases.
      */
     public const VERSION = '0.1.alpha';
@@ -48,6 +50,12 @@ class Application extends Container implements ApplicationContract
     protected string $appPath;
     protected string $basePath;
     protected string $bootstrapPath;
+    protected string $configPath;
+
+    /**
+     * @var string[] $cachePathPrefix.
+     */
+    protected array $cachePathPrefix = ['/', '\\'];
 
     /**
      * Environment configuration files that determine application behavior
@@ -99,10 +107,10 @@ class Application extends Container implements ApplicationContract
      * 
      * @param string|null $basePath Optional base path for the application
      */
-    public function __construct(?string $basePath = null)
+    public function __construct(string|null $basePath = null)
     {
         if ($basePath) {
-            $this->setBasePath($basePath ?? self::inferBasePath());
+            $this->setBasePath($basePath);
         }
 
         $this->registerBaseBindings();
@@ -192,7 +200,8 @@ class Application extends Container implements ApplicationContract
     {
         $kernel = $this->make(Kernel::class);
 
-        $response = $kernel->handle($request)->send();
+        $response = $kernel->handle($request);
+        $response->send();
 
         $kernel->terminate($request, $response);
     }
@@ -296,6 +305,16 @@ class Application extends Container implements ApplicationContract
         return $this->joinPaths($this->basePath, $path);
     }
 
+
+    public function useConfigPath($path)
+    {
+        $this->configPath = $path;
+
+        $this->instance('path.config', $path);
+
+        return $this;
+    }
+
     /**
      * Each path-related method follows a consistent pattern:
      * 1. Takes an optional sub-path
@@ -368,10 +387,9 @@ class Application extends Container implements ApplicationContract
     {
         // Get the list of providers from configuration
         $configProviders = $this->make('config')->get('app.providers');
-    
         // Create a collection for easier manipulation
-        $providers = (new Collection($configProviders));
-    
+        $providers = (new Collection($configProviders)); 
+
         // Create a new provider repository and load all providers
         (new ProviderRepository($this, new FileSystem(), ''))
             ->load($providers->flatten()->toArray());
@@ -415,15 +433,33 @@ class Application extends Container implements ApplicationContract
     }
 
     // Region: Configuration
-    public function getCachedConfigPath()
+    public function cachedConfigPath()
     {
-        return '';
+        return $this->getCache('APP_CONFIG_CACHE', 'public/config/cache.php');
     }
 
     public function configurationIsCached()
     {
         return false;
     }
+    
+    /**
+     * Get cache file 
+     *
+     * @param string $key
+     * @param string $value
+     * @return string
+     */
+    protected function getCache($key, $value)
+    {
+        if (is_null($env = Env::get($key)))
+        {
+            return $this->bootstrapPath($value);
+        }
+
+        return Str::startsWith($env, $this->cachePathPrefix) ? $env : $this->basePath($env);
+    }
+
 
     public function environmentPath()
     {
@@ -481,6 +517,10 @@ class Application extends Container implements ApplicationContract
         static::setInstance($this);
         $this->instance('app', $this);
         $this->instance(Container::class, $this);
+
+        $this->singleton(PackageManifest::class, fn () => new PackageManifest(
+            new FileSystem, $this->basePath(), $this->cachedConfigPath()
+        ));
     }
 
     /**
@@ -493,13 +533,15 @@ class Application extends Container implements ApplicationContract
             'events' => [\Rose\Events\Dispatcher::class, \Rose\Contracts\Events\Dispatcher::class],
             'encrypter' => [\Rose\Encryption\Encryption::class],
             'router' => [\Rose\Routing\Router::class, \Rose\Contracts\Routing\Router::class],
+            'files' => [\Rose\System\FileSystem::class],
+            'cache' => [\Rose\Cache\CacheManager::class],
             'session' => [\Rose\Session\Manager\SessionManager::class],
             'session.store' => [\Rose\Session\Storage\NativeSessionHandler::class, \Rose\Session\Storage\AbstractSessionHandler::class],
         ];
 
         // Register each alias
-        foreach ($aliasesArray as $key => $alias) {
-            foreach ($alias as $alias) {
+        foreach ($aliasesArray as $key => $aliases) {
+            foreach ($aliases as $alias) {
                 $this->alias($key, $alias);
             }
         }
@@ -518,10 +560,24 @@ class Application extends Container implements ApplicationContract
 
     public static function configure(?string $basePath = null): ApplicationBuilder
     {
-        return (new ApplicationBuilder(new static($basePath ?? self::inferBasePath())))
+        $basePath = match (true) {
+            is_string($basePath) => $basePath,
+            default => self::inferBasePath()
+        };
+
+        return (new ApplicationBuilder(new static($basePath)))
             ->withKernels()
             ->withProviders();
     }
+
+
+    public function setLocale($locale)
+    {
+        $this['config']->set('app.locale', $locale);
+
+        $this['events']->dispatch("Updated locale to: {$locale}");
+    }
+
 
     /**
      * Get the version number of the application.

@@ -20,6 +20,39 @@ interface FileSystem
 
     /**
      * @param string $path
+     * @param mixed $data
+     * @return string
+     */
+    public function put($path, $data);
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function delete($path);
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function isDirectory($path);
+
+    /**
+     * @param string $path
+     * @return mixed
+     */
+    public function glob($path);
+
+    /**
+     * @param string $path
+     * @param int $permission
+     * @param bool $recursive
+     * @return mixed
+     */
+    public function makeDirectory($path, $permission, $recursive);
+
+    /**
+     * @param string $path
      * @param int $flags
      * @return string
      *

@@ -82,6 +82,13 @@ if (! function_exists('tap')) {
     }
 }
 
+if (! function_exists('storage_path')) {
+    function storage_path($path)
+    {
+        return app()->storagePath($path);
+    }
+}
+
 
 if (! function_exists('enum_value')) {
     function enum_value($value, $default = null)

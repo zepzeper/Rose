@@ -1,34 +1,9 @@
 {
-    "$schema": "/phpactor.schema.json",
+    "language_server_worse_reflection.enabled": false,
+    "language_server_diagnostics.enabled": false,
+    "language_server_psalm.enabled": false,
     "language_server_phpstan.enabled": true,
-    "language_server_phpstan.bin": "%project_root%/vendor/bin/phpstan",
-    "language_server_phpstan.config": "%project_root%/phpstan.src.neon.dist",
-    "class_to_file.project_root": ".",
-    "class_to_file.brute_force_conversion": true,
-    "completion_worse.completor.doctrine_annotation.enabled": true,
-    "completion_worse.completor.imported_names.enabled": true,
-    "completion_worse.completor.worse_parameter.enabled": true,
-    "completion_worse.completor.named_parameter.enabled": true,
-    "completion_worse.completor.constructor.enabled": true,
-    "completion_worse.completor.class_member.enabled": true,
-    "completion_worse.completor.local_variable.enabled": true,
-    "completion_worse.completor.use.enabled": true,
-    "language_server.diagnostics_on_update": true,
-    "language_server.diagnostics_on_save": true,
-    "language_server.diagnostics_on_open": true,
-    "indexer.enabled_watchers": [
-        "inotify",
-        "watchman"
-    ],
-    "indexer.exclude_patterns": [
-        "/vendor/**/Tests/**/*",
-        "/vendor/**/tests/**/*",
-        "/var/cache/**/*",
-        "/vendor/composer/**/*"
-    ],
-    "composer.enable": true,
-    "logging.enabled": false,
-    "logging.level": "debug",
-
+    "language_server_phpstan.config_path": "phpstan.src.neon.dist",
+    "language_server_worse_reflection.diagnostics.enable": false,
     "language_server_php_cs_fixer.enabled": false
 }

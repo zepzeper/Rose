@@ -44,8 +44,9 @@ class LoadConfiguration
         $items = [];
         $cachedConfigLoaded = false;
 
+        dd(file_exists($cached_config = $app->cachedConfigPath()));
         // Check for and load cached configuration if available
-        if (file_exists($cached_config = $app->getCachedConfigPath())) {
+        if (file_exists($cached_config = $app->cachedConfigPath())) {
             $items = include $cached_config;
             $cachedConfigLoaded = true;
             $app->instance('cached_config_loaded', $cachedConfigLoaded);
@@ -53,6 +54,7 @@ class LoadConfiguration
 
         // Create and register the configuration repository
         $app->instance('config', $config = new Repository($items));
+
 
         // Load configuration files if not using cached config
         if (! $cachedConfigLoaded) {
@@ -137,6 +139,7 @@ class LoadConfiguration
             $nestedDir = $this->getNestedDir($file, $configPath);
             $files[$nestedDir.basename($file->getRealPath(), '.php')] = $file->getRealPath();
         }
+
 
         // Sort keys for consistent loading order
         ksort($files, SORT_NATURAL);

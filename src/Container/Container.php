@@ -4,6 +4,7 @@ namespace Rose\Container;
 
 use ArrayAccess;
 use Closure;
+use LogicException;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
@@ -69,6 +70,11 @@ class Container implements ContainerContract, ArrayAccess
      */
     public function alias(string $abstract, string $alias): void
     {
+        if ($abstract == $alias)
+        {
+            throw new LogicException("[{$abstract}] is aliases to itself");
+        }
+
         $this->aliases[$alias] = $abstract;
     }
 
