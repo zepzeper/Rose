@@ -5,12 +5,12 @@ import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
   // Base public path when served in production
-  base: '/dist/',
+  root: './', // Explicitly set the root directory
 
   // Configure build settings
   build: {
     // Directory to output built files
-    outDir: 'public/dist',
+    outDir: 'dist',
     
     // Create manifest.json for server-side asset loading
     manifest: true,
@@ -34,8 +34,8 @@ export default defineConfig({
     postcss: {
       plugins: [
         tailwindcss,
-        autoprefixer
-      ]
+        autoprefixer,
+      ],
     }
   },
 
