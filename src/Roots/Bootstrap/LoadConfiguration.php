@@ -44,11 +44,17 @@ class LoadConfiguration
         $items = [];
         $cachedConfigLoaded = false;
 
-        dd(file_exists($cached_config = $app->cachedConfigPath()));
         // Check for and load cached configuration if available
         if (file_exists($cached_config = $app->cachedConfigPath())) {
-            $items = include $cached_config;
-            $cachedConfigLoaded = true;
+            $data = file_get_contents($cached_config);
+            $data = unserialize($data);
+
+            if (! isset($data['expiration']) || time() < $data['expiration'])
+            {
+                $items = $data['value']->getMany(['app', 'session']);
+                $cachedConfigLoaded = true;
+            }
+
             $app->instance('cached_config_loaded', $cachedConfigLoaded);
         }
 

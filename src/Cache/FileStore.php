@@ -148,6 +148,12 @@ class FileStore implements Store
     protected function path($key)
     {
         $hash = sha1($key);
+
+        if ($this->files->exists($this->directory))
+        {
+            return $this->directory;
+        }
+
         return $this->directory . '/' . $hash . '.cache';
     }
 

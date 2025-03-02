@@ -457,7 +457,9 @@ class Application extends Container implements ApplicationContract
             return $this->bootstrapPath($value);
         }
 
-        return Str::startsWith($env, $this->cachePathPrefix) ? $env : $this->basePath($env);
+        $cacheDir = Str::startsWith($env, $this->cachePathPrefix) ? $env : $this->basePath($env);
+
+        return glob($cacheDir . '/*.cache')[0];
     }
 
 

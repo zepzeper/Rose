@@ -63,6 +63,12 @@ class FileSystem implements FileSystemContract
      */
     public function put($path, $data)
     {
+        if (! $this->exists($path))
+        {
+            $this->makeDirectory($path, 0755, true);
+        }
+        
+
         return file_put_contents($path, $data) !== false;
     }
 
