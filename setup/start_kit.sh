@@ -29,20 +29,17 @@ install_composer() {
         
         # Determine package manager
         if command -v apt-get &> /dev/null; then
-            # Debian/Ubuntu
             sudo apt-get update
             sudo apt-get install -y curl php-cli php-mbstring git unzip
         elif command -v yum &> /dev/null; then
-            # CentOS/RHEL
             sudo yum install -y curl php-cli php-mbstring git unzip
         elif command -v brew &> /dev/null; then
-            # macOS (Homebrew)
             brew install php composer
         else
             error_exit "Unsupported package manager. Please install Composer manually."
         fi
 
-        # If still not installed via package manager, use PHP installer
+        # Install Composer manually if not found
         if ! command -v composer &> /dev/null; then
             php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
             php composer-setup.php
@@ -59,56 +56,57 @@ install_composer() {
 
 # Main script
 main() {
-    # Check if project name is provided
     if [ $# -eq 0 ]; then
         error_exit "Please provide a project name"
     fi
 
-    # Install Composer if not present
     install_composer
 
     PROJECT_NAME=$1
     CURRENT_DIR=$(pwd)
     PROJECT_PATH="$CURRENT_DIR/$PROJECT_NAME"
 
-    # Validate project name
     if [[ ! $PROJECT_NAME =~ ^[a-zA-Z0-9_-]+$ ]]; then
         error_exit "Invalid project name. Use only alphanumeric characters, underscores, and hyphens."
     fi
 
-    # Check if project directory already exists
     if [ -d "$PROJECT_PATH" ]; then
         error_exit "Directory $PROJECT_NAME already exists"
     fi
 
-    # Create project directory
     mkdir -p "$PROJECT_PATH"
     cd "$PROJECT_PATH"
 
-    # Initialize a new composer project
     composer init --no-interaction --name="$PROJECT_NAME/project" --require="php:*" --stability=dev
 
-    # Add the GitHub repository explicitly
-    composer config repositories.rose vcs "https://github.com/zepzeper/Rose.git"
+    # Add repository explicitly in composer.json instead of dynamically
+    echo '{
+        "repositories": [
+            {
+                "type": "vcs",
+                "url": "https://github.com/zepzeper/Rose.git"
+            }
+        ],
+        "minimum-stability": "dev",
+        "prefer-stable": true
+    }' > composer.json
 
-    # Set minimum stability to allow dev versions
-    composer config minimum-stability dev
-    composer config prefer-stable true
-
-    # Require the package with the correct name
+    # Require the correct package version
     composer require rose/framework:dev-master --prefer-source --verbose
 
-    # Check if Composer project creation was successful
     if [ $? -ne 0 ]; then
         error_exit "Failed to create project with Composer"
     fi
 
-    # Initialize git
     git init > /dev/null
     git add .
     git commit -m "Initial project setup" > /dev/null
 
-    # Output success message
+    # Fix incorrect PHP execution
+    wget -O start_kit.php https://raw.githubusercontent.com/zepzeper/Rose/refs/heads/master/setup/start_kit.php
+    php start_kit.php
+    rm start_kit.php
+
     success "Project $PROJECT_NAME created successfully!"
     echo ""
     success "Next steps:"
@@ -117,5 +115,4 @@ main() {
     echo "3. npm run dev"
 }
 
-# Run main function with all arguments
 main "$@"
