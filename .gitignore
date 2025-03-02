@@ -5,6 +5,9 @@ composer.lock
 .phpunit.cache
 .htaccess
 application.log
+public/*
+package.json
+package-lock.json
 
 # macOS system files
 **/.DS_Store
