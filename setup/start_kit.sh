@@ -85,13 +85,18 @@ main() {
     mkdir -p "$PROJECT_PATH"
     cd "$PROJECT_PATH"
 
-    # Create project using Composer with GitHub repository
-    composer create-project \
-        --no-interaction \
-        --repository=vcs \
-        --stability=stable \
-        https://github.com/zepzeper/Rose.git \
-        .
+    # Initialize a new composer project
+    composer init --no-interaction --name="$PROJECT_NAME/project" --require="php:*" --stability=dev
+
+    # Add the GitHub repository explicitly
+    composer config repositories.rose vcs "https://github.com/zepzeper/Rose.git"
+
+    # Set minimum stability to allow dev versions
+    composer config minimum-stability dev
+    composer config prefer-stable true
+
+    # Require the package with the correct name
+    composer require rose/framework:dev-master --prefer-source --verbose
 
     # Check if Composer project creation was successful
     if [ $? -ne 0 ]; then
