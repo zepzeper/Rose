@@ -89,7 +89,7 @@ main() {
     composer create-project \
         --no-interaction \
         --repository=vcs \
-        --prefer-stable \
+        --stability=stable \
         https://github.com/zepzeper/Rose.git \
         .
 
