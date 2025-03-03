@@ -62,7 +62,6 @@ class Application extends Container implements ApplicationContract
      * across different environments (development, staging, production).
      */
     protected string $environmentFile = '.env';
-    protected string $enviromentPath = __DIR__ . '/../../';
 
     /**
      * The service container instance. While the Application class itself
@@ -465,7 +464,7 @@ class Application extends Container implements ApplicationContract
 
     public function environmentPath()
     {
-        return $this->enviromentPath ?: $this->basePath;
+        return $this->basePath;
     }
 
     public function environmentFile()
