@@ -19,7 +19,8 @@
         "symfony/finder": "^7.2",
         "phpoption/phpoption": "^1.9",
         "phpstan/phpstan": "^2.1",
-        "twig/twig": "^3.20"
+        "twig/twig": "^3.20",
+        "symfony/console": "^7.2"
     },
     "autoload": {
         "psr-4": {

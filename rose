@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . '/vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+use Rose\Console\ServeCommand;
+
+$application = new Application('Rose CLI', '1.0.0');
+
+// Register commands
+$application->add(new ServeCommand());
+
+$application->run();
+
