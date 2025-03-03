@@ -435,7 +435,7 @@ class Application extends Container implements ApplicationContract
     // Region: Configuration
     public function cachedConfigPath()
     {
-        return $this->getCache('APP_CONFIG_CACHE', 'public/config/cache.php');
+        return $this->getCache('APP_CONFIG_CACHE', 'config/cache.php');
     }
 
     public function configurationIsCached()
