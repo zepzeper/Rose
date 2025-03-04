@@ -1,7 +1,6 @@
 <?php
 
 use Rose\Container\Container;
-use Rose\Roots\Http\Helpers\HtmxHelper;
 use Rose\Support\Album\Arr;
 use Rose\Support\Album\Collection;
 
@@ -131,41 +130,5 @@ if (! function_exists('env')) {
     function env($key, $default = null)
     {
         return app()->make('env.repository')->get($key) ?? value($default);
-    }
-}
-
-/**
- * Global helper function to configure HTMX with CSRF protection
- *
- * @return string
- */
-if (!function_exists('htmx_csrf_setup')) {
-    function htmx_csrf_setup(): string
-    {
-        return app(HtmxHelper::class)->setup();
-    }
-}
-
-/**
- * Global helper function to get a CSRF field for forms
- *
- * @return string
- */
-if (!function_exists('csrf_field')) {
-    function csrf_field(): string
-    {
-        return app(HtmxHelper::class)->csrfField();
-    }
-}
-
-/**
- * Global helper function to get a CSRF token
- *
- * @return string
- */
-if (!function_exists('csrf_token')) {
-    function csrf_token(): string
-    {
-        return app(HtmxHelper::class)->getCsrfToken();
     }
 }
