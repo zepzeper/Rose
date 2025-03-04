@@ -17,6 +17,7 @@ class DefaultProviders
             \Rose\Support\Providers\EncryptionServiceProvider::class,
             \Rose\Support\Providers\SessionServiceProvider::class,
             \Rose\Support\Providers\RouteServiceProvider::class,
+            \Rose\Pipeline\PipelineServiceProvider::class
         ];
     }
 
