@@ -1,9 +1,9 @@
 <?php
 
 use Rose\Container\Container;
-use Rose\Http\Helpers\CsrfHelper;
-use Rose\Support\Env;
+use Rose\Roots\Http\Helpers\HtmxHelper;
 use Rose\Support\Album\Arr;
+use Rose\Support\Album\Collection;
 
 if (! function_exists('data_get')) {
     /**
@@ -142,7 +142,7 @@ if (! function_exists('env')) {
 if (!function_exists('htmx_csrf_setup')) {
     function htmx_csrf_setup(): string
     {
-        return app(CsrfHelper::class)->setup();
+        return app(HtmxHelper::class)->setup();
     }
 }
 
@@ -154,7 +154,7 @@ if (!function_exists('htmx_csrf_setup')) {
 if (!function_exists('csrf_field')) {
     function csrf_field(): string
     {
-        return app(CsrfHelper::class)->csrfField();
+        return app(HtmxHelper::class)->csrfField();
     }
 }
 
@@ -166,6 +166,6 @@ if (!function_exists('csrf_field')) {
 if (!function_exists('csrf_token')) {
     function csrf_token(): string
     {
-        return app(CsrfHelper::class)->getCsrfToken();
+        return app(HtmxHelper::class)->getCsrfToken();
     }
 }

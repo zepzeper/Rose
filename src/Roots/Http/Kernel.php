@@ -93,7 +93,7 @@ class Kernel implements KernelContract
         'web' => [
             \Rose\Http\Middleware\CsrfMiddleware::class
         ]
-    ];
+  ];
 
     /**
      * Create a new HTTP kernel instance.
