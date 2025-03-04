@@ -16,6 +16,7 @@ class DefaultProviders
             \Rose\System\FileSystemServiceProvider::class,
             \Rose\Support\Providers\EncryptionServiceProvider::class,
             \Rose\Support\Providers\SessionServiceProvider::class,
+            \Rose\Support\Providers\CsrfServiceProvider::class,
             \Rose\Pipeline\PipelineServiceProvider::class
         ];
     }

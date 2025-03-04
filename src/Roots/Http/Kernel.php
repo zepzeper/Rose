@@ -89,7 +89,11 @@ class Kernel implements KernelContract
      *
      * @var array
      */
-    protected array $middlewareGroups = [];
+    protected array $middlewareGroups = [
+        'web' => [
+            \Rose\Http\Middleware\CsrfMiddleware::class
+        ]
+    ];
 
     /**
      * Create a new HTTP kernel instance.

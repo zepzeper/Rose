@@ -10,10 +10,10 @@ interface Pipeline
     /**
      * Set the array of pipes.
      *
-     * @param  array|string  $pipes
+     * @param  array|string  $middleware
      * @return $this
      */
-    public function through($pipes);
+    public function through($middleware);
 
    /**
      * Run the pipeline with a final destination callback.

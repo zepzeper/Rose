@@ -1,6 +1,7 @@
 <?php
 
 use Rose\Container\Container;
+use Rose\Http\Helpers\CsrfHelper;
 use Rose\Support\Env;
 use Rose\Support\Album\Arr;
 
@@ -133,3 +134,38 @@ if (! function_exists('env')) {
     }
 }
 
+/**
+ * Global helper function to configure HTMX with CSRF protection
+ *
+ * @return string
+ */
+if (!function_exists('htmx_csrf_setup')) {
+    function htmx_csrf_setup(): string
+    {
+        return app(CsrfHelper::class)->setup();
+    }
+}
+
+/**
+ * Global helper function to get a CSRF field for forms
+ *
+ * @return string
+ */
+if (!function_exists('csrf_field')) {
+    function csrf_field(): string
+    {
+        return app(CsrfHelper::class)->csrfField();
+    }
+}
+
+/**
+ * Global helper function to get a CSRF token
+ *
+ * @return string
+ */
+if (!function_exists('csrf_token')) {
+    function csrf_token(): string
+    {
+        return app(CsrfHelper::class)->getCsrfToken();
+    }
+}
