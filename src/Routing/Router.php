@@ -260,7 +260,7 @@ class Router implements RouterContract
 
         $middleware = $this->gatherRouteMiddleware($route);
 
-        $pipeline = $this->container->make('router.pipeline');
+        $pipeline = $this->container->make('middleware.pipeline');
 
         // Process the request through the middleware pipeline
         return $pipeline->through($middleware)->then(
