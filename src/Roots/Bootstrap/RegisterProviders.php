@@ -64,7 +64,7 @@ class RegisterProviders
     public function bootstrap(Application $app)
     {
         // Only merge providers if configuration isn't cached
-        if (! $app->bound('cached_config_loaded') || $app->make('cached_config_loaded') === false) {
+        if (! $app->bound('cached_config_loaded') || $app->make('cached_config_loaded') !== false) {
             $this->mergeAdditionalProviders($app);
         }
 
