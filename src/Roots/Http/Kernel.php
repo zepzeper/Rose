@@ -73,6 +73,7 @@ class Kernel implements KernelContract
      * @var array
      */
     protected array $middleware = [
+        \Rose\Http\Middleware\CorsMiddleware::class
     ];
 
     /**
@@ -143,13 +144,44 @@ class Kernel implements KernelContract
         $this->app->instance('request', $request);
 
         // Process the request through the router
-        $response = $this->forwardToRouter($request);
+        $response = $this->sendRequestThroughPipeline($request);
 
         // Add security and debugging headers
         $this->addGlobalheaders($response);
 
 
         return $response;
+    }
+
+    /**
+     * Send the request through the middleware pipeline.
+     * 
+     * @param Request $request
+     * @return Response
+     */
+    protected function sendRequestThroughPipeline(Request $request): Response
+    {
+        // Register global middleware and groups with the router
+        $this->router->setMiddleware($this->middleware);
+        
+        // Set up middleware groups in router
+        foreach ($this->middlewareGroups as $group => $middleware) {
+            if (method_exists($this->router, 'setMiddlewareGroup')) {
+                $this->router->setMiddlewareGroup($group, $middleware);
+            }
+        }
+        
+        // Get the middleware pipeline from the application
+        $pipeline = $this->app->make('middleware.pipeline');
+        
+        // Process global middleware first
+        $pipeline->through($this->middleware);
+        
+        // Execute the pipeline with the router as the final destination
+        return $pipeline->then($request, function ($request) {
+            // This is the destination closure, which dispatches to the router
+            return $this->router->dispatch($request);
+        });
     }
 
     /**
@@ -194,29 +226,6 @@ class Kernel implements KernelContract
     public function terminate(Request $request, Response $response): void
     {
         // TODO: Do some termination here or something...
-    }
-
-    /**
-     * Forward the request to the router for processing.
-     * This method:
-     * 1. Configures the router with middleware
-     * 2. Sets up middleware groups
-     * 3. Dispatches the request to matching routes
-     * 
-     * @param Request $request The HTTP request to process
-     * @return Response The generated response
-     */
-    protected function forwardToRouter(Request $request)
-    {
-        // Configure global middleware
-        $this->router->setMiddleware($this->middleware);
-
-        // Set up middleware groups
-        /*foreach ($this->middlewareGroups as $group => $middleware) {*/
-        /*    $this->router->middlewareGroup($group, $middleware);*/
-        /*}*/
-
-        return $this->router->dispatch($request->getPathInfo(), $request->getMethod());
     }
 
     /**

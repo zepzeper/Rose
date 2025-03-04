@@ -24,7 +24,6 @@ return [
     */
 
     'providers' => ServiceProvider::defaultProviders()->merge([
-        // Insert package providers
     ])->merge([
         // Application service providers
     ]),

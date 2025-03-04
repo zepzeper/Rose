@@ -7,6 +7,7 @@ use Rose\Container\Container;
 use Rose\Contracts\Routing\Router as RouterContract;
 use Rose\Events\Dispatcher;
 use Rose\Exceptions\Routing\RouteNotFoundException;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -39,7 +40,16 @@ class Router implements RouterContract
      * @var array
      */
     protected $middlewareGroups = [
+        'web' => [],
+        'api' => []
     ];
+    
+    /**
+     * Middleware aliases for easier reference.
+     *
+     * @var array
+     */
+    protected array $middlewareAliases = [];
 
     /**
      * Initialize a new Router instance.
@@ -161,8 +171,9 @@ class Router implements RouterContract
     }
 
     /**
-     *
-     * @param array $middleware
+     * Set the global middleware for the router.
+     * 
+     * @param array $middleware Array of middleware to apply globally
      * @return void
      */
     public function setMiddleware(array $middleware): void
@@ -170,8 +181,49 @@ class Router implements RouterContract
         $this->middleware = $middleware;
     }
 
+    /**
+     * Register a middleware group.
+     * 
+     * @param string $group Name of the middleware group
+     * @param array $middleware Array of middleware in the group
+     * @return void
+     */
     public function setMiddlewareGroup($group, $middleware)
     {
+        $this->middlewareGroups[$group] = $middleware;
+    }
+
+    /**
+     * Register a middleware alias.
+     * 
+     * @param string $alias Short name for the middleware
+     * @param string $middleware Full middleware class name
+     * @return self
+     */
+    public function aliasMiddleware(string $alias, string $middleware)
+    {
+        $this->middlewareAliases[$alias] = $middleware;
+        return $this;
+    }
+
+    /**
+     * Get all registerd middleware aliases
+     *
+     * @return array.
+     */
+    public function getMiddlewareAliases(): array
+    {
+        return $this->middlewareAliases;
+    }
+    
+    /**
+     * Get all registerd middlewareGroups
+     *
+     * @return array.
+     */
+    public function getMiddlewareGroups(): array
+    {
+        return $this->middlewareGroups;
     }
 
     /**
@@ -182,15 +234,15 @@ class Router implements RouterContract
      * 3. Creates the controller
      * 4. Calls the appropriate action
      * 
-     * @param  string $uri    The request URI to match
-     * @param  string $method The HTTP method of the request
+     * @param  Request $uri    The request
      * @return mixed          The response from the route handler
      * @throws RouteNotFoundException If no matching route is found
      * @throws \InvalidArgumentException If the HTTP method is invalid
      */
-    public function dispatch(string $uri, string $method)
+    public function dispatch(Request $request)
     {
-        $uri = $this->normalizeUri($uri);
+        $uri = $this->normalizeUri($request->getPathInfo());
+        $method = $request->getMethod();
 
         // Find a matching route
         $route = $this->routes->match($uri, $method);
@@ -206,13 +258,67 @@ class Router implements RouterContract
         // Get any route parameters that were captured
         $parameters = $route->getParameters();
 
-        // Create controller instance
-        $instance = $this->container->make($controller);
+        $middleware = $this->gatherRouteMiddleware($route);
 
-        // Call the action with parameters
-        $response = $this->container->call([$instance, $action], $parameters);
+        $pipeline = $this->container->make('router.pipeline');
 
-        return new Response($response, 200);
+        // Process the request through the middleware pipeline
+        return $pipeline->through($middleware)->then(
+            $request,
+            function ($request) use ($controller, $action, $parameters) {
+                // Create controller instance
+                $instance = $this->container->make($controller);
+        
+                // Call the action with parameters
+                $response = $this->container->call(
+                    [$instance, $action], 
+                    array_merge($parameters, ['request' => $request])
+                );
+                
+                // Convert string responses to Response objects
+                if (is_string($response)) {
+                    return new Response($response);
+                }
+                
+                // If it's already a Response object, return it directly
+                if ($response instanceof Response) {
+                    return $response;
+                }
+                
+                // Otherwise, wrap it in a Response
+                return new Response($response);
+            }
+        );
+    }
+
+    /**
+     * Gather all middleware for a route including global, group, and route-specific middleware.
+     * 
+     * @param Route $route The route to gather middleware for
+     * @return array Array of middleware
+     */
+    protected function gatherRouteMiddleware(Route $route): array
+    {
+        $middleware = $this->middleware; // Start with global middleware
+        
+        // Add middleware from groups if applicable
+        foreach ($route->getMiddlewareGroups() as $group) {
+            if (isset($this->middlewareGroups[$group])) {
+                $middleware = array_merge($middleware, $this->middlewareGroups[$group]);
+            }
+        }
+        
+        // Add route-specific middleware
+        foreach ($route->getMiddleware() as $name) {
+            // Check if we're using an alias
+            if (isset($this->middlewareAliases[$name])) {
+                $middleware[] = $this->middlewareAliases[$name];
+            } else {
+                $middleware[] = $name;
+            }
+        }
+        
+        return $middleware;
     }
 
     /**

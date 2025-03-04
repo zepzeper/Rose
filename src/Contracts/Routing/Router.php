@@ -4,6 +4,7 @@ namespace Rose\Contracts\Routing;
 
 use Closure;
 use Rose\Routing\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 interface Router
 {
@@ -21,10 +22,9 @@ interface Router
     /**
     * Route handling
     *
-    * @param string $uri
-    * @param string $method
+    * @param Request $request
     * @return mixed
     * @throws \InvalidArgumentException|\RouteNotFoundException
     */
-    public function dispatch(string $uri, string $method);
+    public function dispatch(Request $request);
 }

@@ -18,12 +18,13 @@ class Route implements RouteContract
      * Configuration properties for the route.
      * These control how the route behaves and is identified in the system.
      */
-    private array $middleware = [];     // Middleware to be executed before/after route handling
-    private array $where = [];         // Patterns for route parameter constraints
-    private ?string $name = null;      // Optional name for route identification
-    private ?string $domain = null;    // Optional domain constraint
-    private string $prefix = '';       // URL prefix, often set by route groups
-    private array $parameters = [];    // Captured route parameters from URI
+    private array $middleware = [];        // Middleware for this route
+    private array $middlewareGroups = [];  // Middleware groups this route belongs to
+    private array $where = [];             // Patterns for route parameter constraints
+    private ?string $name = null;          // Optional name for route identification
+    private ?string $domain = null;        // Optional domain constraint
+    private string $prefix = '';           // URL prefix, often set by route groups
+    private array $parameters = [];        // Captured route parameters from URI
     private ?RouteCollection $collection = null;  // Reference to parent collection
 
     /**
@@ -57,12 +58,61 @@ class Route implements RouteContract
      */
     public function middleware($middleware): self
     {
+        // Allow for multiple middleware in a call
+        if (func_num_args() > 1)
+        {
+            $middleware = func_get_args();
+        }
+
         // Merge new middleware with existing ones
         $this->middleware = array_merge(
             $this->middleware,
             is_array($middleware) ? $middleware : [$middleware]
         );
         return $this;
+    }
+
+    /**
+     * Assign the route to middleware groups.
+     * 
+     * @param  string|array $groups Middleware group name(s)
+     * @return self For method chaining
+     */
+    public function middlewareGroups($groups)
+    {
+        // Allow for multiple middleware in a call
+        if (func_num_args() > 1)
+        {
+            $groups = func_get_args();
+        }
+
+        // Merge new middleware with existing ones
+        $this->middlewareGroups = array_merge(
+            $this->middlewareGroups,
+            is_array($groups) ? $groups : [$groups]
+        );
+
+        return $this;
+    }
+
+    /**
+     * Get the middleware assigned to this route.
+     * 
+     * @return array Array of middleware
+     */
+    public function getMiddleware(): array
+    {
+        return $this->middleware;
+    }
+        
+    /**
+     * Get the middleware groups this route belongs to.
+     * 
+     * @return array Array of middleware group names
+     */
+    public function getMiddlewareGroups(): array
+    {
+        return $this->middlewareGroups;
     }
 
     /**
