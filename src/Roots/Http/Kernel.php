@@ -4,6 +4,7 @@ namespace Rose\Roots\Http;
 
 use Carbon\Carbon;
 use Rose\Contracts\Http\Kernel as KernelContract;
+use Rose\Pipeline\Pipeline;
 use Rose\Roots\Application;
 use Rose\Routing\Router;
 use Symfony\Component\HttpFoundation\Request;
@@ -172,7 +173,7 @@ class Kernel implements KernelContract
         }
         
         // Get the middleware pipeline from the application
-        $pipeline = $this->app->make('middleware.pipeline');
+        $pipeline = $this->app->make(Pipeline::class);
         
         // Process global middleware first
         $pipeline->through($this->middleware);
