@@ -289,7 +289,6 @@ class Application extends Container implements ApplicationContract
         $this->instance('path.config', $this->configPath());
         $this->instance('path.database', $this->databasePath());
         $this->instance('path.storage', $this->storagePath());
-        $this->instance('path.htmx', $this->htmxPath());
 
         $this->useBootstrapPath($this->basePath('bootstrap'));
     }
@@ -341,11 +340,6 @@ class Application extends Container implements ApplicationContract
         return $this->joinPaths($this->basePath, 'database' . ($path ? DIRECTORY_SEPARATOR . $path : ''));
     }
 
-    public function htmxPath($path = '')
-    {
-        // For example: htmxPath('htmx.php') returns '/your-app/config/app.php'
-        return $this->joinPaths($this->basePath, 'config' . ($path ? DIRECTORY_SEPARATOR . $path : ''));
-    }
     /**
      * Get the path to the storage directory.
      *

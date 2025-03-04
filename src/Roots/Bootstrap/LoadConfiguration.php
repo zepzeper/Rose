@@ -45,19 +45,20 @@ class LoadConfiguration
         $cachedConfigLoaded = false;
 
         // Check for and load cached configuration if available
-        if (file_exists($cached_config = $app->cachedConfigPath())) {
-            $data = file_get_contents($cached_config);
-            $data = unserialize($data);
-
-            if (! isset($data['expiration']) || time() < $data['expiration'])
-            {
-                $items = $data['value']->getMany(['app', 'session']);
-                $cachedConfigLoaded = true;
-            }
-
-            $app->instance('cached_config_loaded', $cachedConfigLoaded);
-        }
-
+        // TODO: FIX CACHING
+        /*if (file_exists($cached_config = $app->cachedConfigPath())) {*/
+        /*    $data = file_get_contents($cached_config);*/
+        /*    $data = unserialize($data);*/
+        /**/
+        /*    if (! isset($data['expiration']) || time() < $data['expiration'])*/
+        /*    {*/
+        /*        $items = $data['value']->getMany(['app', 'session']);*/
+        /*        $cachedConfigLoaded = true;*/
+        /*    }*/
+        /**/
+        /*    $app->instance('cached_config_loaded', $cachedConfigLoaded);*/
+        /*}*/
+        /**/
         // Create and register the configuration repository
         $app->instance('config', $config = new Repository($items));
 
