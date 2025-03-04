@@ -21,7 +21,7 @@ class HtmxServiceProvider extends ServiceProvider
         // Register the CSRF middleware with HTMX-specific settings
         $this->app->singleton('middleware.csrf', function ($app) {
             // Get configuration from config file or use defaults
-            $config = $app['config']->get('csrf', []);
+            $config = $app['config']->get('csrf');
 
             // Get HTMX-specific CSRF settings
             $htmxConfig = $app['config']->get('htmx.csrf', []);

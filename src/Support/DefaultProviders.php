@@ -17,7 +17,6 @@ class DefaultProviders
             \Rose\Support\Providers\SessionServiceProvider::class,
             \Rose\Support\Providers\HtmxServiceProvider::class,
             \Rose\Support\Providers\EncryptionServiceProvider::class,
-            \Rose\Support\Providers\CsrfServiceProvider::class,
             \Rose\Pipeline\PipelineServiceProvider::class
         ];
     }
