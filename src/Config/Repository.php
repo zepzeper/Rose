@@ -15,6 +15,11 @@ class Repository
     {
         $this->items = $items;
     }
+    
+    public function has($key)
+    {
+        return Arr::has($this->items, $key);
+    }
 
     /**
      * @param array|string $key
