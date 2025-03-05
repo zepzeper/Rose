@@ -69,9 +69,9 @@ class EncryptionServiceProvider extends ServiceProvider
 
     /**
      * @param  array $config
-     * @return \Exception|Option
+     * @return \Exception|string
      */
-    protected function key($config): \Exception|Option
+    protected function key($config): \Exception|string
     {
         return tap(
             $config['encryption_key'], function ($key) {
