@@ -14,8 +14,8 @@ class ErrorResolverProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(ErrorViewResolver::class, function () {
-            return new ErrorViewResolver();
+        $this->app->singleton(ErrorViewResolver::class, function ($app) {
+            return new ErrorViewResolver($app);
         });
     }
 

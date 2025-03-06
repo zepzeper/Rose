@@ -23,9 +23,9 @@ class ErrorViewResolver
     /**
      * Create a new error view resolver
      */
-    public function __construct(?Application $app = null)
+    public function __construct(Application $app)
     {
-        $this->app = $app ?? Application::getInstance();
+        $this->app = $app;
         
         // Load configuration if available
         $this->loadConfiguration();
