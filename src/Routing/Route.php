@@ -289,8 +289,22 @@ class Route implements RouteContract
      */
     protected function getFullPattern(): string
     {
-        // Start with the route's URI
-        $uri = $this->prefix ? trim($this->prefix, '/') . '/' . trim($this->uri, '/') : trim($this->uri, '/');
+        $segments = [];
+
+        // Add prefix if it exists
+        if (!empty($this->prefix)) {
+            $segments[] = trim($this->prefix, '/');
+        }
+
+        // Add URI if it's not just '/' (which would be redundant)
+        if ($this->uri !== '/') {
+            $segments[] = trim($this->uri, '/');
+        }
+
+        // Join segments with a single slash
+        $uri = implode('/', $segments);
+
+        // Ensure we have a leading slash
         $uri = '/' . $uri;
 
         // Convert route parameters to regex patterns
