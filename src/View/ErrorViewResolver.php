@@ -85,7 +85,7 @@ class ErrorViewResolver
             return $this->resolveWithCustomHandler($uri, '404');
         }
         
-        // Create template engine instance
+        // Get template engine instance
         $templateEngine = $this->app->make(TemplateEngine::class);
         
         // Render the configured 404 view
@@ -111,7 +111,7 @@ class ErrorViewResolver
             return $this->resolveWithCustomHandler($uri, '500', $exception);
         }
         
-        // Create template engine instance
+        // Get template engine instance
         $templateEngine = $this->app->make(TemplateEngine::class);
         
         // Only include exception details in non-production environments

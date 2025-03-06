@@ -2,6 +2,7 @@
 
 namespace Rose\View;
 
+use Rose\Roots\Application;
 use Rose\Roots\Http\Helpers\HtmxHelper;
 use Rose\View\Htmx\HtmxTwigExtension;
 use Twig\Environment;
@@ -11,7 +12,7 @@ use Twig\TwigFunction;
 class TemplateEngine
 {
     protected Environment $twig;
-    protected $app;
+    protected Application $app;
     protected HtmxTwigExtension $htmxExtension;
     protected HtmxHelper $htmxHelper;
     
@@ -19,7 +20,7 @@ class TemplateEngine
      * Create a new template engine instance
      *
      * @param string $templatesPath Path to templates directory
-     * @param object $app Application container
+     * @param Application $app Application container
      * @param HtmxTwigExtension $htmxExtension HTMX Twig extension
      * @param HtmxHelper|null $htmxHelper HTMX helper for CSRF functions (optional)
      */
@@ -34,9 +35,18 @@ class TemplateEngine
         $this->htmxHelper = $htmxHelper ?? $app->make(HtmxHelper::class);
         
         $loader = new FilesystemLoader($templatesPath);
+
+        $cache = false;
+        $debug = true;
+        
+        if ($config = $app->get('view.config')) {
+            $cache = $config['cache'] ?? false;
+            $debug = $config['debug'] ?? true;
+        }
+        
         $this->twig = new Environment($loader, [
-            'cache' => false, // Set to a path for cache in production
-            'debug' => true,
+            'cache' => $cache, // Set to a path for cache in production
+            'debug' => $debug,
         ]);
         
         // Register extensions
