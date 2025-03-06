@@ -37,7 +37,7 @@ class ErrorViewResolver
     protected function loadConfiguration(): void
     {
         // Check if error configuration exists
-        if ($errorViews = $this->app['config']->get('errors.views')) {
+        if ($errorViews = $this->app['config']->get('view.errors')) {
             
             // Apply custom view paths from configuration
             foreach ($errorViews as $type => $path) {
@@ -134,12 +134,12 @@ class ErrorViewResolver
     {
         // Check for API requests
         if (str_starts_with($uri, '/api/') && 
-            $this->app->get('config')->has('errors.handlers.api')) {
+            $this->app['config']->has('view.handlers.api')) {
             return true;
         }
         
         // Check for specific error type handlers
-        if ($this->app->get('config')->has("errors.handlers.{$errorType}")) {
+        if ($this->app['config']->has("view.handlers.{$errorType}")) {
             return true;
         }
         
@@ -153,15 +153,15 @@ class ErrorViewResolver
     {
         // For API requests
         if (str_starts_with($uri, '/api/') && 
-            $this->app->get('config')->has('errors.handlers.api')) {
-            $handlerClass = $this->app->get('config')->get('errors.handlers.api');
+            $this->app['config']->has('view.handlers.api')) {
+            $handlerClass = $this->app['config']->get('view.handlers.api');
             $handler = $this->app->make($handlerClass);
             return $handler->handle($errorType, $uri, $exception);
         }
         
         // For specific error types
-        if ($this->app->get('config')->has("errors.handlers.{$errorType}")) {
-            $handlerClass = $this->app->get('config')->get("errors.handlers.{$errorType}");
+        if ($this->app['config']->has("view.handlers.{$errorType}")) {
+            $handlerClass = $this->app['config']->get("view.handlers.{$errorType}");
             $handler = $this->app->make($handlerClass);
             return $handler->handle($errorType, $uri, $exception);
         }

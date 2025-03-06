@@ -22,11 +22,19 @@ class TemplateEngineServiceProvider extends ServiceProvider
         
         // Register view configuration
         $this->app->singleton('view.config', function ($app) {
-            return [
+            // Merge defaults with user configuration if it exists
+            $defaults = [
                 'templates_path' => $app->basePath('resources/views'),
                 'cache' => $app->environment('production') ? $app->storagePath('cache/views') : false,
-                'debug' => !$app->environment('production')
+                'debug' => !$app->environment('production'),
+                'errors' => [
+                    '404' => 'errors/404',
+                    '500' => 'errors/500',
+                ],
+                'extensions' => [],
             ];
+
+            return array_merge($defaults, $app->bound('view') ? $app['view'] : []);
         });
         
         // Register the template engine
@@ -49,6 +57,5 @@ class TemplateEngineServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Optional: Register Twig extensions or configure Twig here
     }
 }
