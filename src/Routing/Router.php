@@ -75,10 +75,8 @@ class Router implements RouterContract
      * @param  Closure|null $callback   Optional configuration callback
      * @return Route                    The newly created route instance
      */
-    public function add($methods, ?string $uri, string $controller, string $action, ?Closure $callback = null): Route
+    public function add($methods, string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
-        $uri = is_null($uri) ? '' : $uri;
-        
         // Create new route instance with specified attributes
         $route = new Route($methods, $uri, $controller, $action);
         
@@ -97,7 +95,7 @@ class Router implements RouterContract
      * Register a GET route.
      * Shorthand method for registering routes that respond to GET requests.
      */
-    public function get(?string $uri, string $controller, string $action, ?Closure $callback = null): Route
+    public function get(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
         $this->resolve($callback);
         return $this->add('GET', $uri, $controller, $action);
@@ -107,7 +105,7 @@ class Router implements RouterContract
      * Register a POST route.
      * Shorthand method for registering routes that respond to POST requests.
      */
-    public function post(?string $uri, string $controller, string $action, ?Closure $callback = null): Route
+    public function post(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
         $this->resolve($callback);
         return $this->add('POST', $uri, $controller, $action);
@@ -117,7 +115,7 @@ class Router implements RouterContract
      * Register a PUT route.
      * Shorthand method for registering routes that respond to PUT requests.
      */
-    public function put(?string $uri, string $controller, string $action, ?Closure $callback = null): Route
+    public function put(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
         $this->resolve($callback);
         return $this->add('PUT', $uri, $controller, $action);
@@ -127,7 +125,7 @@ class Router implements RouterContract
      * Register a PATCH route.
      * Shorthand method for registering routes that respond to PATCH requests.
      */
-    public function patch(?string $uri, string $controller, string $action, ?Closure $callback = null): Route
+    public function patch(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
         $this->resolve($callback);
         return $this->add('PATCH', $uri, $controller, $action);
@@ -137,7 +135,7 @@ class Router implements RouterContract
      * Register a DELETE route.
      * Shorthand method for registering routes that respond to DELETE requests.
      */
-    public function delete(?string $uri, string $controller, string $action, ?Closure $callback = null): Route
+    public function delete(string $uri, string $controller, string $action, ?Closure $callback = null): Route
     {
         $this->resolve($callback);
         return $this->add('DELETE', $uri, $controller, $action);
