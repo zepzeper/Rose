@@ -7,6 +7,7 @@ use Rose\Container\Container;
 use Rose\Contracts\Routing\Router as RouterContract;
 use Rose\Events\Dispatcher;
 use Rose\Exceptions\Routing\RouteNotFoundException;
+use Rose\View\ErrorViewResolver;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -25,6 +26,7 @@ class Router implements RouterContract
      */
     protected const VALID_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
     protected ?Container $container;
+    protected ?ErrorViewResolver $errorViewResolver;
 
     /**
      * All of middlewares.
@@ -58,9 +60,10 @@ class Router implements RouterContract
      * @param RouteCollection $routes Collection to store and manage routes
      * @param Collection $container Application container
      */
-    public function __construct(protected Dispatcher $events, protected RouteCollection $routes, ?Container $container = null)
+    public function __construct(protected Dispatcher $events, protected RouteCollection $routes, ?ErrorViewResolver $errorViewResolver, ?Container $container = null)
     {
         $this->container = $container ?: new Container;
+        $this->errorViewResolver = $errorViewResolver ?: new ErrorViewResolver;
     }
 
     /**
@@ -244,12 +247,18 @@ class Router implements RouterContract
         $uri = $this->normalizeUri($request->getPathInfo());
         $method = $request->getMethod();
 
-        // Find a matching route
-        $route = $this->routes->match($uri, $method);
+        try {
+            // Find a matching route
+            $route = $this->routes->match($uri, $method);
 
-        if (!$route) {
-            throw new RouteNotFoundException("No route found for {$method} {$uri}");
+            if (!$route) {
+                throw new RouteNotFoundException("No route found for {$method} {$uri}");
+            }
+
+        } catch (RouteNotFoundException $e) {
+            return $this->errorViewResolver->resolveNotFound($e);
         }
+
 
         // Get the controller and action
         $controller = $route->getController();

@@ -334,6 +334,12 @@ class Application extends Container implements ApplicationContract
         return $this->joinPaths($this->basePath, 'config' . ($path ? DIRECTORY_SEPARATOR . $path : ''));
     }
 
+    public function viewPath($path = '')
+    {
+        // For example: viewPath('/errors/*') returns '/your-app/resources/errors/*'
+        return $this->joinPaths($this->basePath, 'resources' . ($path ? DIRECTORY_SEPARATOR . $path : ''));
+    }
+
     public function databasePath($path = '')
     {
         // For example: databasePath('migrations') returns '/your-app/database/migrations'
@@ -470,6 +476,11 @@ class Application extends Container implements ApplicationContract
     public function environmentFile()
     {
         return $this->environmentFile;
+    }
+
+    public function isProduction()
+    {
+        return env('APP_ENV') === 'production';
     }
 
     public function detectEnviroment(?Closure $callback = null)

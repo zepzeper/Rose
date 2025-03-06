@@ -13,10 +13,11 @@ class DefaultProviders
     {
         $this->providers = $providers ?: [
             \Rose\Cache\CacheServiceProvider::class,
-            \Rose\Support\Providers\EncryptionServiceProvider::class,
             \Rose\System\FileSystemServiceProvider::class,
+            \Rose\Support\Providers\EncryptionServiceProvider::class,
             \Rose\Support\Providers\SessionServiceProvider::class,
             \Rose\Support\Providers\HtmxServiceProvider::class,
+            \Rose\Support\Providers\ErrorResolverProvider::class,
             \Rose\Pipeline\PipelineServiceProvider::class
         ];
     }
