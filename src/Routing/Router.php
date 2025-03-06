@@ -26,7 +26,6 @@ class Router implements RouterContract
      */
     protected const VALID_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
     protected ?Container $container;
-    protected ?ErrorViewResolver $errorViewResolver;
 
     /**
      * All of middlewares.
@@ -60,10 +59,9 @@ class Router implements RouterContract
      * @param RouteCollection $routes Collection to store and manage routes
      * @param Collection $container Application container
      */
-    public function __construct(protected Dispatcher $events, protected RouteCollection $routes, ?ErrorViewResolver $errorViewResolver, ?Container $container = null)
+    public function __construct(protected Dispatcher $events, protected RouteCollection $routes, ?Container $container = null)
     {
         $this->container = $container ?: new Container;
-        $this->errorViewResolver = $errorViewResolver ?: new ErrorViewResolver;
     }
 
     /**
@@ -256,7 +254,7 @@ class Router implements RouterContract
             }
 
         } catch (RouteNotFoundException $e) {
-            return $this->errorViewResolver->resolveNotFound($e);
+            return $this->container->make(ErrorViewResolver::class)->resolveNotFound($e);
         }
 
 
