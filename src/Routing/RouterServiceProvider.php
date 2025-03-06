@@ -17,7 +17,7 @@ class RouterServiceProvider extends ServiceProvider
     protected function registerRouter()
     {
         $this->app->singleton('router', function($app) {
-            return (new Router($app['events'], new RouteCollection, new ErrorViewResolver, $app));
+            return (new Router($app['events'], new RouteCollection, new ErrorViewResolver($app), $app));
         });
     }
 }
