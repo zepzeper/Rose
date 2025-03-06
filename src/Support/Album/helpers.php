@@ -89,6 +89,12 @@ if (! function_exists('storage_path')) {
     }
 }
 
+if (! function_exists('base_path')) {
+    function base_path($path)
+    {
+        return app()->basePath($path);
+    }
+}
 
 if (! function_exists('enum_value')) {
     function enum_value($value, $default = null)
