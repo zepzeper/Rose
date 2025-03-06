@@ -28,8 +28,8 @@ class TemplateEngineServiceProvider extends ServiceProvider
                 'cache' => $app->environment('production') ? $app->storagePath('cache/views') : false,
                 'debug' => !$app->environment('production'),
                 'errors' => [
-                    '404' => 'errors/404',
-                    '500' => 'errors/500',
+                    '404' => 'errors/404.twig',
+                    '500' => 'errors/500.twig',
                 ],
                 'extensions' => [],
             ];
