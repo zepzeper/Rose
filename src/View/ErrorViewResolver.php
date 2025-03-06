@@ -37,8 +37,7 @@ class ErrorViewResolver
     protected function loadConfiguration(): void
     {
         // Check if error configuration exists
-        if ($this->app->has('config') && $this->app->get('config')->has('errors.views')) {
-            $errorViews = $this->app->get('config')->get('errors.views');
+        if ($errorViews = $this->app->get('config')->get('errors.views')) {
             
             // Apply custom view paths from configuration
             foreach ($errorViews as $type => $path) {
