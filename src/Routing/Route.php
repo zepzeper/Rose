@@ -301,7 +301,7 @@ class Route implements RouteContract
             $pattern = str_replace("(?P<{$param}>[^/]+)", "(?P<{$param}>{$customPattern})", $pattern);
         }
 
-        // Add start and end delimiters
-        return '#^' . $pattern . '$#';
+        // Add start and end delimiters with optional trailing slash
+        return '#^' . $pattern . '/?$#';
     }
 }
