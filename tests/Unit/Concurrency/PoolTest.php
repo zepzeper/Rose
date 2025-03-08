@@ -10,8 +10,7 @@ use Rose\Exceptions\Concurrency\PoolOverflowException;
 
 class PoolTest extends TestCase
 {
-    /** @test */
-    public function it_can_be_created_with_default_options()
+    public function test_it_can_be_created_with_default_options()
     {
         $pool = Pool::create();
         
@@ -20,8 +19,7 @@ class PoolTest extends TestCase
         $this->assertEquals('async', $this->getPrivateProperty($pool, 'runtime'));
     }
 
-    /** @test */
-    public function it_can_be_created_with_async_runtime()
+    public function test_it_can_be_created_with_async_runtime()
     {
         $pool = Pool::async(10);
         
@@ -30,8 +28,7 @@ class PoolTest extends TestCase
         $this->assertEquals('async', $this->getPrivateProperty($pool, 'runtime'));
     }
 
-    /** @test */
-    public function it_can_be_created_with_parallel_runtime()
+    public function test_it_can_be_created_with_parallel_runtime()
     {
         $pool = Pool::parallel(3);
         
@@ -40,8 +37,7 @@ class PoolTest extends TestCase
         $this->assertEquals('parallel', $this->getPrivateProperty($pool, 'runtime'));
     }
 
-    /** @test */
-    public function it_can_add_tasks_to_queue()
+    public function test_it_can_add_tasks_to_queue()
     {
         $pool = Pool::create();
         $task = function() { return 'Hello World'; };
@@ -53,8 +49,7 @@ class PoolTest extends TestCase
         $this->assertSame($task, $queue[0]);
     }
 
-    /** @test */
-    public function it_can_set_concurrency()
+    public function test_it_can_set_concurrency()
     {
         $pool = Pool::create();
         $pool->concurrency(10);
@@ -62,8 +57,7 @@ class PoolTest extends TestCase
         $this->assertEquals(10, $this->getPrivateProperty($pool, 'concurrency'));
     }
 
-    /** @test */
-    public function it_can_set_callback_for_when_task_succeeds()
+    public function test_it_can_set_callback_for_when_task_succeeds()
     {
         $pool = Pool::create();
         $callback = function() {};
@@ -73,8 +67,7 @@ class PoolTest extends TestCase
         $this->assertSame($callback, $this->getPrivateProperty($pool, 'successCallback'));
     }
 
-    /** @test */
-    public function it_can_set_callback_for_when_task_fails()
+    public function test_it_can_set_callback_for_when_task_fails()
     {
         $pool = Pool::create();
         $callback = function() {};
@@ -84,8 +77,7 @@ class PoolTest extends TestCase
         $this->assertSame($callback, $this->getPrivateProperty($pool, 'failedCallback'));
     }
 
-    /** @test */
-    public function it_can_set_callback_for_before_task()
+    public function test_it_can_set_callback_for_before_task()
     {
         $pool = Pool::create();
         $callback = function() {};
@@ -95,8 +87,7 @@ class PoolTest extends TestCase
         $this->assertSame($callback, $this->getPrivateProperty($pool, 'beforeTask'));
     }
 
-    /** @test */
-    public function it_can_get_pool_status()
+    public function test_it_can_get_pool_status()
     {
         $pool = Pool::create();
         
@@ -119,8 +110,7 @@ class PoolTest extends TestCase
         $this->assertEquals(8, $status->getTotal());
     }
 
-    /** @test */
-    public function it_throws_exception_when_creating_process_with_overflow()
+    public function test_it_throws_exception_when_creating_process_with_overflow()
     {
         $pool = Pool::create()->concurrency(2);
         $this->setPrivateProperty($pool, 'runningProcesses', [new \stdClass(), new \stdClass()]);
@@ -132,11 +122,7 @@ class PoolTest extends TestCase
         $method->invoke($pool, function() {});
     }
 
-    /**
-     * @test
-     * @depends it_can_add_tasks_to_queue
-     */
-    public function it_can_run_tasks()
+    public function test_it_can_run_tasks()
     {
         $pool = $this->getMockBuilder(Pool::class)
             ->onlyMethods(['createProcess'])

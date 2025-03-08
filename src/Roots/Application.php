@@ -50,7 +50,7 @@ class Application extends Container implements ApplicationContract
      * These paths help locate different components and resources.
      */
     protected string $appPath;
-    protected string $basePath;
+    protected string $basePath = '';
     protected string $bootstrapPath;
     protected string $configPath;
 

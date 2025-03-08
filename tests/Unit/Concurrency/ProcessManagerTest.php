@@ -9,8 +9,7 @@ use Rose\Contracts\Container\Container;
 
 class ProcessManagerTest extends TestCase
 {
-    /** @test */
-    public function it_can_be_created_with_container()
+    public function test_it_can_be_created_with_container()
     {
         $container = $this->createMock(Container::class);
         $manager = new ProcessManager($container);
@@ -18,8 +17,7 @@ class ProcessManagerTest extends TestCase
         $this->assertInstanceOf(ProcessManager::class, $manager);
     }
 
-    /** @test */
-    public function it_can_create_default_pool()
+    public function test_it_can_create_default_pool()
     {
         $container = $this->createMock(Container::class);
         $manager = new ProcessManager($container);
@@ -30,8 +28,7 @@ class ProcessManagerTest extends TestCase
         $this->assertEquals(5, $this->getPrivateProperty($pool, 'concurrency'));
     }
 
-    /** @test */
-    public function it_can_create_pool_with_custom_concurrency()
+    public function test_it_can_create_pool_with_custom_concurrency()
     {
         $container = $this->createMock(Container::class);
         $manager = new ProcessManager($container);
@@ -42,8 +39,7 @@ class ProcessManagerTest extends TestCase
         $this->assertEquals(10, $this->getPrivateProperty($pool, 'concurrency'));
     }
 
-    /** @test */
-    public function it_can_create_async_pool()
+    public function test_it_can_create_async_pool()
     {
         $container = $this->createMock(Container::class);
         $manager = new ProcessManager($container);
@@ -55,8 +51,7 @@ class ProcessManagerTest extends TestCase
         $this->assertEquals('async', $this->getPrivateProperty($pool, 'runtime'));
     }
 
-    /** @test */
-    public function it_can_create_parallel_pool()
+    public function test_it_can_create_parallel_pool()
     {
         $container = $this->createMock(Container::class);
         $manager = new ProcessManager($container);

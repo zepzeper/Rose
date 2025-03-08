@@ -43,8 +43,7 @@ class AsyncRuntimeTest extends TestCase
         parent::tearDown();
     }
     
-    /** @test */
-    public function it_can_be_created_with_worker_script()
+    public function test_it_can_be_created_with_worker_script()
     {
         $runtime = new AsyncRuntime($this->mockWorkerPath);
         
@@ -52,8 +51,7 @@ class AsyncRuntimeTest extends TestCase
         $this->assertEquals($this->mockWorkerPath, $this->getPrivateProperty($runtime, 'workerScript'));
     }
 
-    /** @test */
-    public function it_can_start_process()
+    public function test_it_can_start_process()
     {
         // Create a mock runtime that overrides procOpen method
         $runtime = $this->getMockBuilder(AsyncRuntime::class)
@@ -89,8 +87,7 @@ class AsyncRuntimeTest extends TestCase
         $this->assertCount(3, $pipes);
     }
 
-    /** @test */
-    public function it_throws_exception_when_start_fails()
+    public function test_it_throws_exception_when_start_fails()
     {
         // Since we can't directly mock a method to throw an exception with willReturn(false),
         // we need to create a custom mock class that overrides the start method

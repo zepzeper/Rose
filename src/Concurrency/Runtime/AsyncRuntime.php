@@ -10,7 +10,7 @@ class AsyncRuntime extends AbstractRuntime
     protected string $workerScript;
 
     /**
-     * Create a new paralle runtime instance
+     * Create a new async runtime instance
      *
      * @param string $workerScript 
      * @return void 
@@ -27,12 +27,19 @@ class AsyncRuntime extends AbstractRuntime
     public function start(): array
     {
         // Set environment variables to make the process async
-        $env = $_ENV;
+        $env = [];
+        foreach ($_ENV as $key => $value) {
+            $env[$key] = $value;
+        }
         $env['ASYNC_PROCESS'] = 'true';
         
-        // Start process
-        $process = proc_open(
-            'php ' . $this->workerScript,
+        // Start process with correct PHP path
+        $phpBinary = PHP_BINARY;
+        $command = escapeshellcmd($phpBinary) . ' ' . escapeshellarg($this->workerScript);
+        
+        $pipes = [];
+        $process = $this->procOpen(
+            $command,
             self::DESCRIPTOR,
             $pipes,
             null,

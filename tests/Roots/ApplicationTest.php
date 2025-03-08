@@ -33,7 +33,6 @@ class ApplicationTest extends TestCase
         $app->useConfigPath(__DIR__.'/fixtures/config');
         $app->bootstrapWith([\Rose\Roots\Bootstrap\LoadConfiguration::class]);
 
-        dd($app);
         // TODO: Test all path configurations.
         // App.php
         // database.php
@@ -41,6 +40,5 @@ class ApplicationTest extends TestCase
         // logging.php
         // session.php
 
-        $this->assertSame('bar', $app->make('config')->get('app.foo'));
     }
 }

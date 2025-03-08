@@ -7,8 +7,7 @@ use Rose\Concurrency\PoolStatus;
 
 class PoolStatusTest extends TestCase
 {
-    /** @test */
-    public function it_can_be_created_with_values()
+    public function test_it_can_be_created_with_values()
     {
         $status = new PoolStatus(5, 2, 3, 1);
         
@@ -19,16 +18,14 @@ class PoolStatusTest extends TestCase
         $this->assertEquals(1, $status->getFailed());
     }
 
-    /** @test */
-    public function it_can_get_total_processes()
+    public function test_it_can_get_total_processes()
     {
         $status = new PoolStatus(5, 2, 3, 1);
         
         $this->assertEquals(11, $status->getTotal());
     }
 
-    /** @test */
-    public function it_can_check_if_all_processes_finished()
+    public function test_it_can_check_if_all_processes_finished()
     {
         // Not finished: has pending tasks
         $status1 = new PoolStatus(5, 0, 3, 1);
@@ -43,8 +40,7 @@ class PoolStatusTest extends TestCase
         $this->assertTrue($status3->isFinished());
     }
 
-    /** @test */
-    public function it_can_check_if_all_processes_are_successful()
+    public function test_it_can_check_if_all_processes_are_successful()
     {
         // Not successful: not finished
         $status1 = new PoolStatus(5, 0, 3, 1);

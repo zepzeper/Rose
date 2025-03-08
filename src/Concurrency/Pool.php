@@ -15,7 +15,6 @@ use Rose\Support\SerializableClosure;
 
 class Pool implements PoolContract
 {
-
     protected array $queue = [];
     protected array $runningProcesses = [];
 
@@ -34,6 +33,10 @@ class Pool implements PoolContract
         $this->concurrency = $concurrency;
         $this->runtime = $runtime;
         $this->worker = realpath(__DIR__ . "/worker.php");
+        
+        if (!$this->worker || !file_exists($this->worker)) {
+            throw new Exception("Worker script not found at: " . __DIR__ . "/worker.php");
+        }
     }
 
     /**
@@ -83,6 +86,16 @@ class Pool implements PoolContract
      */
     public function run(): self
     {
+        $this->startPendingTasks();
+        
+        return $this;
+    }
+    
+    /**
+     * Start pending tasks up to concurrency limit
+     */
+    protected function startPendingTasks(): void
+    {
         while (count($this->queue) > 0 && count($this->runningProcesses) < $this->concurrency)
         {
             $task = array_shift($this->queue);
@@ -97,8 +110,6 @@ class Pool implements PoolContract
 
             $this->runningProcesses[] = $process;
         }
-        
-        return $this;
     }
 
     /**
@@ -108,69 +119,66 @@ class Pool implements PoolContract
     {
         $startTime = time();
         
-        while (count($this->runningProcesses) > 0) {
-            foreach ($this->runningProcesses as $index => $process) {
-                // Skip if process is already done
-                if (!$process->isRunning()) {
-                    // Get exit code (will also finalize the process)
-                    $exitCode = $process->wait(0); // 0 timeout since it's already done
-                    
-                    // Remove from running processes
-                    unset($this->runningProcesses[$index]);
-                    
-                    // Process output or exception
-                    if ($exitCode === 0) {
-                        $output = $process->getOutput();
-                        
-                        // Add to successful processes
-                        $this->successful[] = $process;
-                        
-                        // Call success callback if set
-                        if ($this->successCallback) {
-                            $event = new ProcessSucceeded($process, $output);
-                            call_user_func($this->successCallback, $event);
-                        }
-                    } else {
-                        // Create exception from output
-                        $exception = $this->createExeptionFromOutput($process->getOutput());
-                        
-                        // Add to failed processes
-                        $this->failed[] = $process;
-                        
-                        // Call failure callback if set
-                        if ($this->failedCallback) {
-                            $event = new ProcessFailed($process, $exception);
-                            call_user_func($this->failedCallback, $event);
-                        }
-                    }
-                    
-                    continue;
+        // Process tasks until everything is done or timeout is reached
+        while (count($this->runningProcesses) > 0 || count($this->queue) > 0) {
+            // Check for processes that have finished
+            $this->checkFinishedProcesses();
+            
+            // Check for timeout
+            if ($timeout !== null && (time() - $startTime) >= $timeout) {
+                foreach ($this->runningProcesses as $process) {
+                    $process->stop();
                 }
-                
-                // Check for timeout
-                if ($timeout !== null && (time() - $startTime) >= $timeout) {
-                    // Stop all remaining processes
-                    foreach ($this->runningProcesses as $runningProcess) {
-                        $runningProcess->stop();
-                    }
-                    
-                    return $this;
-                }
+                break;
             }
             
-            // Start new processes if queue is not empty
-            if (count($this->queue) > 0) {
-                $this->run();
-            }
+            // Start new processes if there's capacity
+            $this->startPendingTasks();
             
             // Small delay to prevent CPU hogging
             usleep(1000);
-            
-            // Reset array keys after potential removal
-            $this->runningProcesses = array_values($this->runningProcesses);
         }
         
         return $this;
+    }
+    
+    /**
+     * Check for finished processes and handle their results
+     */
+    protected function checkFinishedProcesses(): void
+    {
+        foreach ($this->runningProcesses as $index => $process) {
+            if (!$process->isRunning()) {
+                // Get exit code
+                $exitCode = $process->wait(0);
+                
+                // Process output based on exit code
+                if ($exitCode === 0) {
+                    $output = $process->getOutput();
+                    $this->successful[] = $process;
+                    
+                    if ($this->successCallback) {
+                        $event = new ProcessSucceeded($process, $output);
+                        call_user_func($this->successCallback, $event);
+                    }
+                } else {
+                    $errorOutput = $process->getErrorOutput();
+                    $exception = $this->createExceptionFromOutput($process->getOutput() ?: $errorOutput);
+                    $this->failed[] = $process;
+                    
+                    if ($this->failedCallback) {
+                        $event = new ProcessFailed($process, $exception);
+                        call_user_func($this->failedCallback, $event);
+                    }
+                }
+                
+                // Remove from running processes
+                unset($this->runningProcesses[$index]);
+            }
+        }
+        
+        // Reset array keys after removal
+        $this->runningProcesses = array_values($this->runningProcesses);
     }
 
     /**
@@ -243,32 +251,35 @@ class Pool implements PoolContract
             throw PoolOverflowException::create($this->concurrency);
         }
 
-        $serialzedTask = new SerializableClosure($task);
+        $serializedTask = new SerializableClosure($task);
 
         // Create process based on runtime
-        $runtime = $this->runtime === "parallel" ? new ParallelRuntime($this->worker) : new AsyncRuntime($this->worker);
+        $runtime = $this->runtime === "parallel" 
+            ? new ParallelRuntime($this->worker) 
+            : new AsyncRuntime($this->worker);
 
-        return new Process($runtime, $serialzedTask);
+        return new Process($runtime, $serializedTask);
     }
 
     /**
      * Create an exception from the process output
      *
-     * @param array|mixed $output.
+     * @param mixed $output.
      * @return \Throwable
      */
-    protected function createExeptionFromOutput($output): \Throwable
+    protected function createExceptionFromOutput($output): \Throwable
     {
         // Handle non-array output
+        if (is_string($output)) {
+            return new Exception($output, 0);
+        }
+        
         if (!is_array($output) || !isset($output['error'])) {
             return new Exception("Unknown error occurred", 0);
         }
 
         $error = $output['error'];
 
-        $exception = new Exception($error['message'] ?? "Unknown error.", $error['code'] ?? 0);
-
-        return $exception;
+        return new Exception($error['message'] ?? "Unknown error.", $error['code'] ?? 0);
     }
-
 }

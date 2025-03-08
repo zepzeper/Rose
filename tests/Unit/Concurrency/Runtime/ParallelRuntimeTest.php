@@ -43,8 +43,7 @@ class ParallelRuntimeTest extends TestCase
         parent::tearDown();
     }
 
-    /** @test */
-    public function it_can_be_created_with_worker_script()
+    public function test_it_can_be_created_with_worker_script()
     {
         $runtime = new ParallelRuntime($this->mockWorkerPath);
         
@@ -52,8 +51,7 @@ class ParallelRuntimeTest extends TestCase
         $this->assertEquals($this->mockWorkerPath, $this->getPrivateProperty($runtime, 'workerScript'));
     }
 
-    /** @test */
-    public function it_can_start_process_with_proc_open_when_pcntl_not_available()
+    public function test_it_can_start_process_with_proc_open_when_pcntl_not_available()
     {
         // Create a mock runtime that overrides hasPcntl and procOpen methods
         $runtime = $this->getMockBuilder(ParallelRuntime::class)
@@ -93,8 +91,7 @@ class ParallelRuntimeTest extends TestCase
         $this->assertCount(3, $pipes);
     }
 
-    /** @test */
-    public function it_throws_exception_when_proc_open_start_fails()
+    public function test_it_throws_exception_when_proc_open_start_fails()
     {
         // Create a custom runtime that throws an exception from start()
         $customRuntime = new class($this->mockWorkerPath) extends ParallelRuntime {
@@ -108,8 +105,7 @@ class ParallelRuntimeTest extends TestCase
         $customRuntime->start();
     }
 
-    /** @test */
-    public function it_uses_pcntl_when_available()
+    public function test_it_uses_pcntl_when_available()
     {
         // Create a mock runtime that overrides hasPcntl and startWithPcntl methods
         $runtime = $this->getMockBuilder(ParallelRuntime::class)

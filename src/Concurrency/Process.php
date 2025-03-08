@@ -8,7 +8,6 @@ use Rose\Support\SerializableClosure;
 
 class Process implements ProcessContract
 {
-
     protected object $runtime;
 
     /**
@@ -38,8 +37,8 @@ class Process implements ProcessContract
     protected bool $isRunning = false;
     protected ?int $exitCode = null;
 
-    protected mixed $output;
-    protected mixed $errorOutput;
+    protected mixed $output = null;
+    protected mixed $errorOutput = null;
 
     protected SerializableClosure $task;
 
@@ -94,13 +93,13 @@ class Process implements ProcessContract
             if ($timeout !== null && time() - $start >= $timeout)
             {
                 $this->stop();
-                throw ProcessException::fromMessage("Timeout reached while waiting for processes to finnish.");
+                throw ProcessException::fromMessage("Timeout reached while waiting for processes to finish.");
             }
             
             usleep(1000); 
         }
 
-        // Get the ouput
+        // Get the output
         $this->output = $this->readOutput();
         $this->errorOutput = $this->readErrorOutput();
 
@@ -133,6 +132,13 @@ class Process implements ProcessContract
         }
 
         $status = proc_get_status($this->process);
+        
+        // If status is false, the process is not valid
+        if ($status === false) {
+            $this->isRunning = false;
+            return false;
+        }
+        
         $this->isRunning = $status['running'];
 
         if (! $this->isRunning && $this->exitCode === null)
@@ -156,21 +162,34 @@ class Process implements ProcessContract
      */
     public function stop(): self
     {
+        // Close pipes first
+        foreach ($this->pipes as $index => $pipe)
+        {
+            if (is_resource($pipe))
+            {
+                fclose($pipe);
+            }
+            unset($this->pipes[$index]);
+        }
+        
+        // Reset pipes array
+        $this->pipes = [];
+
+        // Only try to terminate if it's a resource and still running
         if (is_resource($this->process))
         {
-            foreach ($this->pipes as $pipe)
-            {
-                if (is_resource($pipe))
-                {
-                    fclose($pipe);
-                }
+            // Check if it's a valid process before terminating
+            $status = @proc_get_status($this->process);
+            if ($status !== false && isset($status['running']) && $status['running']) {
+                @proc_terminate($this->process);
             }
-
-            // Kill process
-            proc_terminate($this->process);
-
-            $this->isRunning = false;
+            
+            // Close the process resource
+            @proc_close($this->process);
+            $this->process = null;
         }
+        
+        $this->isRunning = false;
         
         return $this;
     }
@@ -215,12 +234,25 @@ class Process implements ProcessContract
         }
 
         $output = stream_get_contents($this->stdout);
+        
+        // If output is empty, return null
+        if (empty($output)) {
+            return null;
+        }
 
         try {
-            return unserialize($output);
-        } catch (\Throwable $e)
-        {
-            throw ProcessException::fromMessage("Failed to unserialize output");
+            $unserialized = @unserialize($output);
+            
+            // If we successfully unserialized a structured response
+            if (is_array($unserialized) && isset($unserialized['success'])) {
+                return $unserialized['success'] ? $unserialized['result'] : null;
+            }
+            
+            // Otherwise return the raw output or unserialized data
+            return $unserialized !== false ? $unserialized : $output;
+        } catch (\Throwable $e) {
+            // If unserialize fails, return the raw output
+            return $output;
         }
     }
 
