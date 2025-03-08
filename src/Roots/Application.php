@@ -20,6 +20,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Whoops\Handler\PrettyPageHandler;
 use Whoops\Run;
 
+use const DIRECTORY_SEPARATOR;
+
 /**
  * The Application class is the heart of your framework, serving as both a service container
  * and the central coordination point for all framework components. It manages the entire

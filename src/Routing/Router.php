@@ -257,7 +257,6 @@ class Router implements RouterContract
             return $this->container->make(ErrorViewResolver::class)->resolveNotFound($e);
         }
 
-
         // Get the controller and action
         $controller = $route->getController();
         $action = $route->getAction();
