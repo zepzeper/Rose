@@ -22,9 +22,10 @@ interface Pool
     /**
      * Wait for all tasks to finish.
      *
+     * @param int|null $timeout
      * @return self
      */
-    public function wait(): self;
+    public function wait(?int $timeout = null): self;
     
     /**
      * Get the status of the pool.

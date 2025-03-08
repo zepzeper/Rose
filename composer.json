@@ -20,7 +20,8 @@
         "phpoption/phpoption": "^1.9",
         "phpstan/phpstan": "^2.1",
         "twig/twig": "^3.20",
-        "symfony/console": "^7.2"
+        "symfony/console": "^7.2",
+        "opis/closure": "^4.3"
     },
     "autoload": {
         "psr-4": {

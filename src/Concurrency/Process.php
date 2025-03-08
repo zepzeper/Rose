@@ -240,6 +240,10 @@ class Process implements ProcessContract
 
     public function __destruct()
     {
-        $this->stop();
+        try {
+            $this->stop();
+        } catch (\Throwable $e) {
+            // Silently handle destruction errors
+        }
     }
 }

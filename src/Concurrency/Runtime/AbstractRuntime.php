@@ -14,4 +14,15 @@ abstract class AbstractRuntime
     {
         return [];
     }
+
+    protected function hasPcntl(): bool
+    {
+        return function_exists('pcntl_fork');
+    }
+
+    protected function procOpen($command, $descriptorspec, &$pipes, $cwd = null, $env = null)
+    {
+        return proc_open($command, $descriptorspec, $pipes, $cwd, $env);
+    }
+
 }

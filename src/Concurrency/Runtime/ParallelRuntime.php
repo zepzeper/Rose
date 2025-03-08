@@ -27,23 +27,24 @@ class ParallelRuntime extends AbstractRuntime
     public function start(): array
     {
         // Use process using pcntl_fork 
-        if (function_exists('pcntl_fork'))
+        if ($this->hasPcntl())
         {
             return $this->startWithPcntl();
         }
+
         // Fall back to proc_open
-        $process = proc_open(
+        $pipes = [];
+        $process = $this->procOpen(
             'php ' . $this->workerScript,
             self::DESCRIPTOR,
             $pipes
         );
-        
+
         if (!is_resource($process)) {
             throw ProcessException::fromMessage('Failed to start process');
         }
-        
-        return [$process, $pipes];
 
+        return [$process, $pipes];
     }
 
     /**

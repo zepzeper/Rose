@@ -4,6 +4,8 @@ namespace Rose\Concurrency;
 
 use Closure;
 use Exception;
+use Rose\Concurrency\Events\ProcessFailed;
+use Rose\Concurrency\Events\ProcessSucceeded;
 use Rose\Concurrency\Runtime\AsyncRuntime;
 use Rose\Concurrency\Runtime\ParallelRuntime;
 use Rose\Contracts\Concurrency\Pool as PoolContract;
@@ -20,12 +22,11 @@ class Pool implements PoolContract
     protected array $successful = [];
     protected array $failed = [];
     
+    protected Closure|null $beforeTask = null;
+    protected Closure|null $successCallback = null;
+    protected Closure|null $failedCallback = null;
+
     protected int $concurrency;
-
-    protected Closure|null $beforeTask;
-    protected Closure|null $successCallback;
-    protected Closure|null $failedCallback;
-
     protected string $runtime;
     protected string $worker;
 
@@ -103,9 +104,73 @@ class Pool implements PoolContract
     /**
      * {@inheritdoc}
      */
-    public function wait(): self
+    public function wait(?int $timeout = null): self
     {
-
+        $startTime = time();
+        
+        while (count($this->runningProcesses) > 0) {
+            foreach ($this->runningProcesses as $index => $process) {
+                // Skip if process is already done
+                if (!$process->isRunning()) {
+                    // Get exit code (will also finalize the process)
+                    $exitCode = $process->wait(0); // 0 timeout since it's already done
+                    
+                    // Remove from running processes
+                    unset($this->runningProcesses[$index]);
+                    
+                    // Process output or exception
+                    if ($exitCode === 0) {
+                        $output = $process->getOutput();
+                        
+                        // Add to successful processes
+                        $this->successful[] = $process;
+                        
+                        // Call success callback if set
+                        if ($this->successCallback) {
+                            $event = new ProcessSucceeded($process, $output);
+                            call_user_func($this->successCallback, $event);
+                        }
+                    } else {
+                        // Create exception from output
+                        $exception = $this->createExeptionFromOutput($process->getOutput());
+                        
+                        // Add to failed processes
+                        $this->failed[] = $process;
+                        
+                        // Call failure callback if set
+                        if ($this->failedCallback) {
+                            $event = new ProcessFailed($process, $exception);
+                            call_user_func($this->failedCallback, $event);
+                        }
+                    }
+                    
+                    continue;
+                }
+                
+                // Check for timeout
+                if ($timeout !== null && (time() - $startTime) >= $timeout) {
+                    // Stop all remaining processes
+                    foreach ($this->runningProcesses as $runningProcess) {
+                        $runningProcess->stop();
+                    }
+                    
+                    return $this;
+                }
+            }
+            
+            // Start new processes if queue is not empty
+            if (count($this->queue) > 0) {
+                $this->run();
+            }
+            
+            // Small delay to prevent CPU hogging
+            usleep(1000);
+            
+            // Reset array keys after potential removal
+            $this->runningProcesses = array_values($this->runningProcesses);
+        }
+        
+        return $this;
     }
 
     /**
@@ -187,15 +252,20 @@ class Pool implements PoolContract
     }
 
     /**
-     * Create an exeption from the process output
+     * Create an exception from the process output
      *
-     * @param array $output.
+     * @param array|mixed $output.
      * @return \Throwable
      */
-    protected function createExeptionFromOutput(array $output): \Throwable
+    protected function createExeptionFromOutput($output): \Throwable
     {
+        // Handle non-array output
+        if (!is_array($output) || !isset($output['error'])) {
+            return new Exception("Unknown error occurred", 0);
+        }
+
         $error = $output['error'];
-        
+
         $exception = new Exception($error['message'] ?? "Unknown error.", $error['code'] ?? 0);
 
         return $exception;
