@@ -8,8 +8,16 @@
          cacheDirectory=".phpunit.cache"
          backupStaticProperties="false">
     <testsuites>
-        <testsuite name="Rose Test Suite">
-            <directory suffix="Test.php">./tests</directory>
+        <testsuite name="Rose Unit">
+            <directory suffix="Test.php">./tests/Unit/</directory>
+        </testsuite>
+
+        <testsuite name="Rose Feature">
+            <directory suffix="Test.php">./tests/Feature/</directory>
+        </testsuite>
+
+        <testsuite name="Rose Benchmark">
+            <directory suffix="Test.php">./tests/Benchmarks/</directory>
         </testsuite>
     </testsuites>
 </phpunit>
