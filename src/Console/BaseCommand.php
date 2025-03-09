@@ -7,31 +7,56 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Console\Application as SymfonyApplication;
 
 abstract class BaseCommand extends Command
 {
-    protected Application $app;
+    /**
+     * The Rose application instance.
+     *
+     * @var \Rose\Roots\Application
+     */
+    protected $app;
 
-    protected InputInterface $input;
-    protected OutputInterface $output;
+    /**
+     * The input interface implementation.
+     *
+     * @var \Symfony\Component\Console\Input\InputInterface
+     */
+    protected $input;
 
+    /**
+     * The output interface implementation.
+     *
+     * @var \Symfony\Component\Console\Output\OutputInterface
+     */
+    protected $output;
+
+    /**
+     * The console command name.
+     *
+     * @var string
+     */
     protected static string $defaultName;
 
     /**
      * Create a new console command instance.
      *
+     * @param \Rose\Roots\Application|null $app
      * @return void
      */
-    public function __construct()
+    public function __construct(?Application $app = null)
     {
         parent::__construct(static::$defaultName);
+
+        $this->app = $app;
     }
 
     /**
      * Execute the console command.
      *
-     * @param InputInterface $input
-     * @param OutputInterface $output
+     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @param \Symfony\Component\Console\Output\OutputInterface $output
      * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -52,7 +77,7 @@ abstract class BaseCommand extends Command
     /**
      * Create a new SymfonyStyle instance.
      *
-     * @return SymfonyStyle
+     * @return \Symfony\Component\Console\Style\SymfonyStyle
      */
     protected function io()
     {
@@ -60,13 +85,18 @@ abstract class BaseCommand extends Command
     }
 
     /**
-     * Set the application instance.
-     *
-     * @param Application $app
+     * Set the Symfony application.
+     * 
+     * @param \Symfony\Component\Console\Application $application
      * @return void
      */
-    public function setApplication($app): void
+    public function setApplication(?SymfonyApplication $application = null): void
     {
-        $this->app = $app;
+        parent::setApplication($application);
+        
+        // If the application is our ConsoleApplication, extract the Rose app
+        if ($application !== null && $application instanceof ConsoleApplication) {
+            $this->app = $application->getRoseApp();
+        }
     }
 }

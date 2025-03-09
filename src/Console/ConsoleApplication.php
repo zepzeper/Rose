@@ -40,6 +40,16 @@ class ConsoleApplication extends SymfonyConsole
     }
 
     /**
+     * Get the Rose application instance.
+     *
+     * @return \Rose\Roots\Application
+     */
+    public function getRoseApp()
+    {
+        return $this->app;
+    }
+
+    /**
      * Register the base console commands for the application.
      *
      * @return void
