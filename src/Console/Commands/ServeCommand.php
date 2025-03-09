@@ -30,7 +30,7 @@ class ServeCommand extends BaseCommand
         return $this->handle();
     }
 
-    protected function handle()
+    protected function handle(): int
     {
         // Get options from the input
         $host = $this->input->getOption('host');

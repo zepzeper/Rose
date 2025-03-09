@@ -3,6 +3,7 @@
 namespace Rose\Console\Commands;
 
 use Rose\Console\BaseCommand;
+use Rose\Routing\RouteCollection;
 use Rose\Routing\Router;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputOption;
@@ -16,13 +17,15 @@ class RouteListCommand extends BaseCommand
      *
      * @return void
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName(self::$defaultName)
              ->setDescription('List all registered routes')
              ->addOption('method', 'm', InputOption::VALUE_OPTIONAL, 'Filter routes by method (GET, POST, etc.)')
              ->addOption('name', null, InputOption::VALUE_OPTIONAL, 'Filter routes by name')
-             ->addOption('path', null, InputOption::VALUE_OPTIONAL, 'Filter routes by path pattern');
+             ->addOption('path', null, InputOption::VALUE_OPTIONAL, 'Filter routes by path pattern')
+             ->addOption('controller', 'c', InputOption::VALUE_OPTIONAL, 'Filter routes by controller')
+             ->addOption('detailed', 'd', InputOption::VALUE_NONE, 'Display routes in a detailed format');
     }
 
     /**
@@ -30,7 +33,7 @@ class RouteListCommand extends BaseCommand
      *
      * @return int
      */
-    protected function handle()
+    protected function handle(): int
     {
         $router = $this->app->make(Router::class);
         $routes = $router->getRoutes();
@@ -44,15 +47,17 @@ class RouteListCommand extends BaseCommand
         $method = $this->input->getOption('method');
         $name = $this->input->getOption('name');
         $path = $this->input->getOption('path');
+        $controller = $this->input->getOption('controller');
+        $detailed = $this->input->getOption('detailed');
         
-        $filteredRoutes = $this->filterRoutes($routes, $method, $name, $path);
-        
+        $filteredRoutes = $this->filterRoutes($routes, $method, $name, $path, $controller);
+
         if (empty($filteredRoutes)) {
             $this->output->writeln('<comment>No routes match the given criteria.</comment>');
             return 0;
         }
         
-        $this->displayRoutes($filteredRoutes);
+        $this->displayDetailedRoutes($filteredRoutes);
         
         return 0;
     }
@@ -60,19 +65,21 @@ class RouteListCommand extends BaseCommand
     /**
      * Filter the routes by the provided criteria.
      *
-     * @param array $routes
+     * @param RouteCollection $routes
      * @param string|null $method
      * @param string|null $name
      * @param string|null $path
+     * @param string|null $controller
      * @return array
      */
-    protected function filterRoutes($routes, $method = null, $name = null, $path = null)
+    protected function filterRoutes($routes, $method = null, $name = null, $path = null, $controller = null): array
     {
         $filtered = [];
         
+        $routes = $routes->getRoutes();
         foreach ($routes as $route) {
             // Filter by HTTP method
-            if ($method && !in_array(strtoupper($method), $route->methods())) {
+            if ($method && !in_array(strtoupper($method), $route->getMethods())) {
                 continue;
             }
             
@@ -82,7 +89,12 @@ class RouteListCommand extends BaseCommand
             }
             
             // Filter by path pattern
-            if ($path && !str_contains($route->uri(), $path)) {
+            if ($path && !str_contains($route->getUri(), $path)) {
+                continue;
+            }
+            
+            // Filter by controller
+            if ($controller && !str_contains($route->getController(), $controller)) {
                 continue;
             }
             
@@ -93,25 +105,37 @@ class RouteListCommand extends BaseCommand
     }
     
     /**
-     * Display the routes in a table.
+     * Display the routes in a table format.
      *
      * @param array $routes
      * @return void
      */
-    protected function displayRoutes($routes)
+    protected function displayDetailedRoutes($routes): void
     {
         $table = new Table($this->output);
-        $table->setHeaders(['Method', 'URI', 'Name', 'Action', 'Middleware']);
+        $table->setStyle('box');
+        $table->setHeaders([
+            '<fg=white;options=bold>METHOD</>',
+            '<fg=white;options=bold>URI</>',
+            '<fg=white;options=bold>NAME</>',
+            '<fg=white;options=bold>CONTROLLER</>',
+            '<fg=white;options=bold>ACTION</>',
+            '<fg=white;options=bold>PARAMETERS</>'
+        ]);
         
         $rows = [];
         
         foreach ($routes as $route) {
+            $methods = implode('|', $route->getMethods());
+            $methodsFormatted = $this->colorizeMethod($methods);
+            
             $rows[] = [
-                implode('|', $route->methods()),
-                $route->uri(),
-                $route->getName() ?: '',
-                $this->formatAction($route->getAction()),
-                $this->formatMiddleware($route->middleware()),
+                $methodsFormatted,
+                '<fg=cyan>' . $route->getUri() . '</>',
+                $route->getName() ? '<fg=yellow>' . $route->getName() . '</>' : '',
+                '<fg=green>' . $this->shortenClassName($route->getController()) . '</>',
+                $route->getAction(),
+                implode('|', $route->getParameters())
             ];
         }
         
@@ -123,22 +147,62 @@ class RouteListCommand extends BaseCommand
     }
     
     /**
-     * Format the route action for display.
+     * Colorize HTTP methods for better visibility.
      *
-     * @param mixed $action
+     * @param string $method
      * @return string
      */
-    protected function formatAction($action)
+    protected function colorizeMethod($method): string
     {
-        if (is_string($action['uses'])) {
-            return $action['uses'];
+        $colors = [
+            'GET' => 'green',
+            'POST' => 'yellow',
+            'PUT' => 'blue',
+            'PATCH' => 'cyan',
+            'DELETE' => 'red',
+            'OPTIONS' => 'magenta',
+            'HEAD' => 'white',
+        ];
+        
+        if (strpos($method, '|') !== false) {
+            // Handle multiple methods
+            $methods = explode('|', $method);
+            $colorized = [];
+            
+            foreach ($methods as $m) {
+                $color = $colors[$m] ?? 'default';
+                $colorized[] = "<fg=$color>$m</>";
+            }
+            
+            return implode('|', $colorized);
         }
         
-        if (is_callable($action['uses']) && isset($action['controller'])) {
-            return $action['controller'];
+        $color = $colors[$method] ?? 'default';
+        return "<fg=$color>$method</>";
+    }
+    
+    /**
+     * Format the route parameters for display.
+     *
+     * @param array $parameters
+     * @return string
+     */
+    protected function formatParameters($parameters): string
+    {
+        if (empty($parameters)) {
+            return '';
         }
         
-        return 'Closure';
+        $formatted = [];
+        foreach ($parameters as $name => $value) {
+            if (is_numeric($name)) {
+                $formatted[] = $value;
+            } else {
+                $formatted[] = "$name: $value";
+            }
+        }
+        
+        return implode(', ', $formatted);
     }
     
     /**
@@ -147,7 +211,7 @@ class RouteListCommand extends BaseCommand
      * @param array $middleware
      * @return string
      */
-    protected function formatMiddleware($middleware)
+    protected function formatMiddleware($middleware): string
     {
         if (empty($middleware)) {
             return '';
@@ -156,5 +220,21 @@ class RouteListCommand extends BaseCommand
         return implode(', ', array_map(function ($m) {
             return is_string($m) ? $m : get_class($m);
         }, $middleware));
+    }
+    
+    /**
+     * Shorten a class name by removing the namespace.
+     *
+     * @param string $className
+     * @return string
+     */
+    protected function shortenClassName($className): string
+    {
+        if (str_contains($className, '\\')) {
+            $parts = explode('\\', $className);
+            return end($parts);
+        }
+        
+        return $className;
     }
 }
