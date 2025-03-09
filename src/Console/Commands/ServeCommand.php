@@ -27,10 +27,16 @@ class ServeCommand extends BaseCommand
         $this->input = $input;
         $this->output = $output;
         
-        $host = $input->getOption('host');
-        $port = $input->getOption('port');
-        $docroot = $input->getOption('docroot');
-        $runVite = $input->getOption('vite');
+        return $this->handle();
+    }
+
+    protected function handle()
+    {
+        // Get options from the input
+        $host = $this->input->getOption('host');
+        $port = $this->input->getOption('port');
+        $docroot = $this->input->getOption('docroot');
+        $runVite = $this->input->getOption('vite');
 
         // Command to start PHP built-in server
         $phpCommand = sprintf(
@@ -40,14 +46,14 @@ class ServeCommand extends BaseCommand
             escapeshellarg($docroot)
         );
 
-        $output->writeln("<info>Starting PHP server at http://$host:$port</info>");
-        $output->writeln("<comment>Press Ctrl+C to stop the server</comment>");
+        $this->output->writeln("<info>Starting PHP server at http://$host:$port</info>");
+        $this->output->writeln("<comment>Press Ctrl+C to stop the server</comment>");
 
         // Start PHP server in the background
         $phpProcess = proc_open($phpCommand, [], $pipes);
 
         if ($runVite) {
-            $output->writeln("<info>Starting Vite development server...</info>");
+            $this->output->writeln("<info>Starting Vite development server...</info>");
             // Command to run Vite (Ensure it's in the right directory)
             $viteCommand = 'npm run dev';
 
@@ -63,11 +69,5 @@ class ServeCommand extends BaseCommand
         proc_close($phpProcess);
 
         return Command::SUCCESS;
-    }
-
-    protected function handle()
-    {
-        // This method is required by BaseCommand but we override execute() directly
-        // for backward compatibility
     }
 }

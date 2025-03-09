@@ -2,7 +2,12 @@
 
 namespace Rose\Console;
 
+use Rose\Console\Commands\CacheClearCommand;
+use Rose\Console\Commands\KeyGenerateCommand;
+use Rose\Console\Commands\LogTailCommand;
+use Rose\Console\Commands\RouteListCommand;
 use Rose\Console\Commands\ServeCommand;
+use Rose\Console\Commands\WorkerCommand;
 use Rose\Roots\Application;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\InputInterface;
@@ -39,10 +44,15 @@ class ConsoleApplication extends SymfonyConsole
      *
      * @return void
      */
-    protected function registerBaseCommands()
+    protected function registerBaseCommands(): void
     {
         // Register the serve command
         $this->add(new ServeCommand());
+        $this->add(new CacheClearCommand());
+        $this->add(new KeyGenerateCommand());
+        $this->add(new LogTailCommand());
+        $this->add(new RouteListCommand());
+        $this->add(new WorkerCommand());
     }
 
     /**
@@ -51,7 +61,7 @@ class ConsoleApplication extends SymfonyConsole
      * @param string $path
      * @return void
      */
-    public function registerCommandsFromDirectory($path)
+    public function registerCommandsFromDirectory($path): void
     {
         if (!is_dir($path)) {
             return;
@@ -75,7 +85,7 @@ class ConsoleApplication extends SymfonyConsole
      *
      * @return \Rose\Roots\Application
      */
-    public function getInstance()
+    public function getInstance(): Application
     {
         return $this->app;
     }
@@ -102,7 +112,7 @@ class ConsoleApplication extends SymfonyConsole
      *
      * @return void
      */
-    protected function bootstrap()
+    protected function bootstrap(): void
     {
         $bootstrappers = [
             \Rose\Roots\Bootstrap\LoadEnviromentVariables::class,

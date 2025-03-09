@@ -20,14 +20,11 @@ abstract class BaseCommand extends Command
     /**
      * Create a new console command instance.
      *
-     * @param Application|null $app
      * @return void
      */
-    public function __construct(?Application $app = null)
+    public function __construct()
     {
         parent::__construct(static::$defaultName);
-
-        $this->app = $app;
     }
 
     /**

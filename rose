@@ -24,7 +24,7 @@ require __DIR__ . '/vendor/autoload.php';
  *
  *========================================================================*/
 
-$app = Rose\Roots\Application::configure(__DIR__)->create();
+$app = require_once __DIR__.'/bootstrap/app.php';
 
 /*========================================================================
  * Run the console app
@@ -38,11 +38,6 @@ $console = new Rose\Console\ConsoleApplication($app, $app->version());
 
 // Register all commands in the app/Console/Commands directory
 $console->registerCommandsFromDirectory($app->basePath('app/Console/Commands'));
-
-// Add the available commands
-$console->add(new Rose\Console\Commands\CacheClearCommand($app));
-$console->add(new Rose\Console\Commands\WorkerCommand($app));
-$console->add(new Rose\Console\Commands\LogTailCommand($app));
 
 // Run the console application
 $status = $console->run();
