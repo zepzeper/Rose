@@ -66,12 +66,10 @@ abstract class BaseCommand extends Command
      * Set the application instance.
      *
      * @param Application $app
-     * @return $this
+     * @return void
      */
-    public function setApplication(?Application $app)
+    public function setApplication(?Application $app): void
     {
         $this->app = $app;
-
-        return $this;
     }
 }

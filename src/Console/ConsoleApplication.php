@@ -2,6 +2,7 @@
 
 namespace Rose\Console;
 
+use Rose\Console\Commands\ServeCommand;
 use Rose\Roots\Application;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\InputInterface;
@@ -74,7 +75,7 @@ class ConsoleApplication extends SymfonyConsole
      *
      * @return \Rose\Roots\Application
      */
-    public function getLaravel()
+    public function getInstance()
     {
         return $this->app;
     }
