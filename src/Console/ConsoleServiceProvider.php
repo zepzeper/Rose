@@ -17,6 +17,7 @@ class ConsoleServiceProvider extends ServiceProvider
         Commands\LogTailCommand::class,
         Commands\RouteListCommand::class,
         Commands\KeyGenerateCommand::class,
+        Commands\ServeCommand::class,
     ];
 
     /**
