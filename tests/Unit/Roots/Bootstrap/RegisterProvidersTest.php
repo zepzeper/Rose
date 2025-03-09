@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Rose\Roots\Bootstrap;
+namespace Rose\Tests\Unit\Roots\Bootstrap;
 
 use PHPUnit\Framework\TestCase;
 use Rose\Config\Repository;
@@ -24,16 +24,6 @@ class RegisterProvidersTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
             
-        // Track if registerConfiguredProviders was called
-        $registerConfiguredProvidersCalled = false;
-        $this->app->method('registerConfiguredProviders')
-            ->willReturnCallback(function() use (&$registerConfiguredProvidersCalled) {
-                $registerConfiguredProvidersCalled = true;
-            });
-            
-        // Use custom property to track if it was called
-        $this->app->registerConfiguredProvidersCalled = &$registerConfiguredProvidersCalled;
-        
         // Mock make() with callback
         $this->app->method('make')
             ->willReturnCallback(function($abstract) {
@@ -81,10 +71,14 @@ class RegisterProvidersTest extends TestCase
     
     public function test_it_registers_configured_providers()
     {
+        // Use expects() instead of manually tracking the calls
+        $this->app->expects($this->once())
+            ->method('registerConfiguredProviders');
+            
         $bootstrapper = new RegisterProviders();
         $bootstrapper->bootstrap($this->app);
         
-        $this->assertTrue($this->app->registerConfiguredProvidersCalled);
+        // No need to manually assert since the expectation above will fail if the method isn't called
     }
     
     public function test_it_merges_providers_into_config()
