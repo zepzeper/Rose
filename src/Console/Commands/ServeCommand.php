@@ -1,15 +1,16 @@
 <?php
 
-namespace Rose\Console;
+namespace Rose\Console\Commands;
 
+use Rose\Console\BaseCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 
-class ServeCommand extends Command
+class ServeCommand extends BaseCommand
 {
-    protected static $defaultName = 'serve';
+    protected static string $defaultName = 'serve';
 
     protected function configure()
     {
@@ -23,6 +24,9 @@ class ServeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->input = $input;
+        $this->output = $output;
+        
         $host = $input->getOption('host');
         $port = $input->getOption('port');
         $docroot = $input->getOption('docroot');
@@ -42,20 +46,28 @@ class ServeCommand extends Command
         // Start PHP server in the background
         $phpProcess = proc_open($phpCommand, [], $pipes);
 
-        $output->writeln("<info>Starting Vite development server...</info>");
-        // Command to run Vite (Ensure it's in the right directory)
-        $viteCommand = 'npm run dev';
+        if ($runVite) {
+            $output->writeln("<info>Starting Vite development server...</info>");
+            // Command to run Vite (Ensure it's in the right directory)
+            $viteCommand = 'npm run dev';
 
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            // Windows specific command (start without opening a new window)
-            $viteCommand = 'start /B ' . $viteCommand;
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                // Windows specific command (start without opening a new window)
+                $viteCommand = 'start /B ' . $viteCommand;
+            }
+
+            proc_open($viteCommand, [], $pipes);
         }
-
-        proc_open($viteCommand, [], $pipes);
 
         // Keep PHP process alive
         proc_close($phpProcess);
 
         return Command::SUCCESS;
+    }
+
+    protected function handle()
+    {
+        // This method is required by BaseCommand but we override execute() directly
+        // for backward compatibility
     }
 }

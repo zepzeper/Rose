@@ -1,15 +1,50 @@
 #!/usr/bin/env php
 <?php
 
+// Define the application root path
+define('ROSE_START', microtime(true));
+
+/*========================================================================
+ * Register autoloader
+ *
+ * Composer provides a convenient, automatically generated class loader
+ * for our application. We just need to utilize it! We'll require it
+ * into the script here so that we do not have to worry about the
+ * loading of any of our classes manually. It's great to relax.
+ *
+ *========================================================================*/
+
 require __DIR__ . '/vendor/autoload.php';
 
-use Symfony\Component\Console\Application;
-use Rose\Console\ServeCommand;
+/*========================================================================
+ * Create app
+ *
+ * The first thing we will do is create a new Rose application instance
+ * which serves as the "glue" for all the components of the framework.
+ *
+ *========================================================================*/
 
-$application = new Application('Rose CLI', '1.0.0');
+$app = Rose\Roots\Application::configure(__DIR__)->create();
 
-// Register commands
-$application->add(new ServeCommand());
+/*========================================================================
+ * Run the console app
+ *
+ * When we run the console application, the current CLI command will be
+ * executed in this console and the response sent back to the user
+ * terminal. Here goes nothing!
+ *
+ *========================================================================*/
+$console = new Rose\Console\ConsoleApplication($app, $app->version());
 
-$application->run();
+// Register all commands in the app/Console/Commands directory
+$console->registerCommandsFromDirectory($app->basePath('app/Console/Commands'));
 
+// Add the available commands
+$console->add(new Rose\Console\Commands\CacheClearCommand($app));
+$console->add(new Rose\Console\Commands\WorkerCommand($app));
+$console->add(new Rose\Console\Commands\LogTailCommand($app));
+
+// Run the console application
+$status = $console->run();
+
+exit($status);
