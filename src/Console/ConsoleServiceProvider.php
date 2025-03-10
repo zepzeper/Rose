@@ -18,6 +18,7 @@ class ConsoleServiceProvider extends ServiceProvider
         Commands\RouteListCommand::class,
         Commands\KeyGenerateCommand::class,
         Commands\ServeCommand::class,
+        Commands\Tests\QueueTestCommand::class,
     ];
 
     /**
