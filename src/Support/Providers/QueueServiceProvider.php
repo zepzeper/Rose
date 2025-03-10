@@ -2,64 +2,51 @@
 
 namespace Rose\Support\Providers;
 
-use Rose\Console\Commands\WorkerCommand;
+use Rose\Support\ServiceProvider;
 use Rose\Queue\QueueManager;
 use Rose\Queue\QueueWorker;
-use Rose\Support\ServiceProvider;
 
 class QueueServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Register the service provider.
      *
      * @return void
      */
-    public function register(): void
+    public function register()
+    {
+        $this->registerQueueManager();
+        $this->registerQueueWorker();
+    }
+
+    /**
+     * Register the queue manager.
+     *
+     * @return void
+     */
+    protected function registerQueueManager()
     {
         $this->app->singleton('queue', function ($app) {
-            // Get the queue configuration
-            $config = $app->make('config')->get('queue', [
-                'default' => 'file',
-                'connections' => [
-                    'file' => [
-                        'driver' => 'file',
-                        'path' => storage_path('queue'),
-                    ],
-                    'redis' => [
-                        'driver' => 'redis',
-                        'host' => '127.0.0.1',
-                        'port' => 6379,
-                        'database' => 0,
-                    ],
-                ],
-            ]);
+            // Get queue configuration from config
+            $config = $app['config']['queue'] ?? [];
             
+            // Create the manager instance
             return new QueueManager($app, $config);
         });
-        
-        $this->app->singleton(QueueManager::class, function ($app) {
-            return $app->make('queue');
-        });
-        
-        $this->app->singleton(QueueWorker::class, function ($app) {
-            return new QueueWorker($app->make(QueueManager::class), $app);
-        });
     }
-    
+
     /**
-     * Bootstrap any application services.
+     * Register the queue worker.
      *
      * @return void
      */
-    public function boot(): void
+    protected function registerQueueWorker()
     {
-        $this->commands([
-            WorkerCommand::class,
-        ]);
-        
-        // Publish configuration file
-        $this->publishes([
-            __DIR__.'/../config/queue.php' => config_path('queue.php'),
-        ], 'config');
+        $this->app->singleton(QueueWorker::class, function ($app) {
+            return new QueueWorker(
+                $app->make('queue'),
+                $app
+            );
+        });
     }
 }
