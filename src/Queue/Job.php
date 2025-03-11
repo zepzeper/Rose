@@ -162,10 +162,10 @@ class Job implements JobContract
                 return ($this->job)($this->data);
             }
             
-            $instance = new $this->job;
+            $instance = new $this->job($this->data);
             
             if (method_exists($instance, 'handle')) {
-                return $instance->handle($this->data);
+                return $instance->handle();
             }
             
             return $instance($this->data);

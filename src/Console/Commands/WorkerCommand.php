@@ -247,15 +247,4 @@ class WorkerCommand extends BaseCommand
         
         file_put_contents($path, date('Y-m-d H:i:s'));
     }
-    
-    /**
-     * Helper function to get the storage path.
-     *
-     * @param string $path
-     * @return string
-     */
-    protected function storage_path(string $path = ''): string
-    {
-        return $this->app->make('path.storage') . ($path ? DIRECTORY_SEPARATOR . $path : $path);
-    }
 }
