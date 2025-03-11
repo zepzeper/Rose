@@ -5,17 +5,6 @@ namespace Rose\Support\Traits;
 trait Dispatchable
 {
     /**
-     * Dispatch the job with the given arguments.
-     *
-     * @param  mixed  ...$args
-     * @return mixed
-     */
-    public static function dispatch(...$args)
-    {
-        return (new static(...$args))->dispatch();
-    }
-    
-    /**
      * Dispatch the job with the given arguments after the specified delay.
      *
      * @param  \DateTimeInterface|\DateInterval|int  $delay

@@ -221,8 +221,8 @@ class QueueWorker
      */
     protected function fireEvent(object $event): void
     {
-        if ($this->container->has('events')) {
-            $this->container->make('events')->dispatch($event);
+        if ($this->container->make('events')) {
+            $this->container->get('events')->dispatch($event);
         }
     }
     

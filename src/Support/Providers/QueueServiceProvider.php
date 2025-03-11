@@ -28,7 +28,7 @@ class QueueServiceProvider extends ServiceProvider
     {
         $this->app->singleton('queue', function ($app) {
             // Get queue configuration from config
-            $config = $app['config']['queue'] ?? [];
+            $config = $app->make('config')->get('queue');
             
             // Create the manager instance
             return new QueueManager($app, $config);
