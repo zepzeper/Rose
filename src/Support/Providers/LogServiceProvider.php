@@ -35,7 +35,7 @@ class LogServiceProvider extends ServiceProvider
      */
     protected function createLogger()
     {
-        $logger = new Logger('rose');
+        $logger = new Logger('Rose');
         
         $this->configureHandlers($logger);
         
@@ -50,7 +50,7 @@ class LogServiceProvider extends ServiceProvider
      */
     protected function configureHandlers(Logger $logger)
     {
-        $config = $this->app->make('config')->get('logging');
+        $config = $this->app->make('config')->get('logger');
 
         $storageDir = $this->app->storagePath('logs');
         

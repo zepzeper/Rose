@@ -178,6 +178,8 @@ class QueueWorker
             
             // Process the job
             $result = $job->handle();
+
+            $this->incrementProcessed();
             
             // Delete the job from the queue if it was processed successfully
             $job->delete();
@@ -188,6 +190,7 @@ class QueueWorker
             return $result;
         } catch (Throwable $e) {
             // Handle job failure
+            $this->incrementFailed();
             $this->handleJobFailure($job, $e, $maxTries);
             
             return null;
