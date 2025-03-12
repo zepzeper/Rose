@@ -310,17 +310,4 @@ class QueueManager
         
         return new RedisQueueDriver($redis, $keyPrefix);
     }
-
-    /**
-     * Helper function to get the storage path.
-     *
-     * @param  string  $path
-     * @return string
-     */
-    protected function storage_path(string $path = ''): string
-    {
-        return $this->container->make('path.storage') 
-            ? $this->container->make('path.storage') . ($path ? DIRECTORY_SEPARATOR . $path : $path)
-            : storage_path($path);
-    }
 }

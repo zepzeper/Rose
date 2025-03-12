@@ -74,7 +74,7 @@ class WorkerCommand extends BaseCommand
         $worker = $this->app->make(QueueWorker::class);
         
         // Handle shutdown signals
-        $this->listenForSignals();
+        $this->listenForSignals($worker);
         
         try {
             $io->section('Starting Queue Worker');
@@ -209,42 +209,39 @@ class WorkerCommand extends BaseCommand
     /**
      * Set up signal handlers for graceful shutdown.
      *
+     * @param QueueWorker $worker
      * @return void
      */
-    protected function listenForSignals(): void
+    protected function listenForSignals(QueueWorker $worker): void
     {
         if (extension_loaded('pcntl')) {
             pcntl_async_signals(true);
             
             // Handle SIGTERM and SIGINT signals
-            pcntl_signal(SIGTERM, function () {
+            pcntl_signal(SIGTERM, function ($worker) {
                 $this->io()->warning('SIGTERM received, shutting down gracefully...');
-                $this->createSignalFile();
+                $worker->stop();
+                $worker->logHealthMetrics(true);
                 exit(0);
             });
             
-            pcntl_signal(SIGINT, function () {
+            pcntl_signal(SIGINT, function ($worker) {
                 $this->io()->warning('SIGINT received, shutting down gracefully...');
-                $this->createSignalFile();
+                $worker->stop();
+                $worker->logHealthMetrics(true);
                 exit(0);
             });
         }
     }
     
     /**
-     * Create a signal file to tell the worker to stop.
+     * Helper function to get the storage path.
      *
-     * @return void
+     * @param string $path
+     * @return string
      */
-    protected function createSignalFile(): void
+    protected function storage_path(string $path = ''): string
     {
-        $path = storage_path('framework/stop-worker');
-        $dir = dirname($path);
-        
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        
-        file_put_contents($path, date('Y-m-d H:i:s'));
+        return $this->app->make('path.storage') . ($path ? DIRECTORY_SEPARATOR . $path : $path);
     }
 }

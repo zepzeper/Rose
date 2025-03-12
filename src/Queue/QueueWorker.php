@@ -131,9 +131,6 @@ class QueueWorker
                 $this->shouldQuit = true;
                 break;
             }
-            
-            // Check for quit signal
-            $this->checkForQuitSignal();
         }
 
         $this->logHealthMetrics(true); // Final health log
@@ -258,19 +255,6 @@ class QueueWorker
     {
         if ($this->container->make('events')) {
             $this->container->get('events')->dispatch($event);
-        }
-    }
-    
-    /**
-     * Check if the worker should quit.
-     *
-     * @return void
-     */
-    protected function checkForQuitSignal(): void
-    {
-        // Check if there's a signal file, for example
-        if (file_exists(storage_path('framework/stop-worker'))) {
-            $this->shouldQuit = true;
         }
     }
     
