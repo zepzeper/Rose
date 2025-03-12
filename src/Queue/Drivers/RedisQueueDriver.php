@@ -146,7 +146,7 @@ class RedisQueueDriver implements QueueDriver
         
         // Begin a multi/exec transaction
         $this->redis->multi();
-        
+
         // Move jobs to the main queue
         foreach ($jobs as $job) {
             $this->redis->rPush($this->getKey($queue), $job);

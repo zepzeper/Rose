@@ -2,7 +2,6 @@
 
 namespace Rose\Queue;
 
-use Exception;
 use Rose\Concurrency\Pool;
 use Rose\Contracts\Container\Container;
 use Rose\Contracts\Queue\Job;
@@ -160,6 +159,7 @@ class QueueWorker
             $this->handleJobFailure($job, $e, $maxTries);
             
             return null;
+           /*throw new \Exception($e);*/
         }
     }
     
@@ -247,18 +247,5 @@ class QueueWorker
     public function stop(): void
     {
         $this->shouldQuit = true;
-    }
-    
-    /**
-     * Helper function to get the storage path.
-     *
-     * @param  string  $path
-     * @return string
-     */
-    protected function storage_path(string $path = ''): string
-    {
-        return $this->container->has('path.storage') 
-            ? $this->container->make('path.storage') . ($path ? DIRECTORY_SEPARATOR . $path : $path)
-            : sys_get_temp_dir() . '/storage/' . $path;
     }
 }
