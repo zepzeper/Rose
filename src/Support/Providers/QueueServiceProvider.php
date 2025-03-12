@@ -33,6 +33,7 @@ class QueueServiceProvider extends ServiceProvider
             // Create the manager instance
             return new QueueManager($app, $config);
         });
+
     }
 
     /**

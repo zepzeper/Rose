@@ -12,13 +12,12 @@ use Rose\Roots\Configuration\ApplicationBuilder;
 use Rose\Roots\System\PackageManifest;
 use Rose\Routing\RouterServiceProvider;
 use Rose\Support\Album\Collection;
+use Rose\Support\Providers\LogServiceProvider;
 use Rose\Support\ServiceProvider;
 use Rose\Support\Str;
 use Rose\Support\Env;
 use Rose\System\FileSystem;
 use Symfony\Component\HttpFoundation\Request;
-use Whoops\Handler\PrettyPageHandler;
-use Whoops\Run;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -434,8 +433,8 @@ class Application extends Container implements ApplicationContract
 
     protected function registerBaseServiceProviders(): void
     {
-        $this->registerErrorHandler();
         $this->register(new EventServiceProvider($this));
+        $this->register(new LogServiceProvider($this));
         $this->register(new RouterServiceProvider($this));
     }
 
@@ -499,12 +498,6 @@ class Application extends Container implements ApplicationContract
     {
         // Check if the current environment matches any of the provided ones
         return env('APP_ENV') == $environments;
-    }
-
-    protected function registerErrorHandler(): void
-    {
-        // Set up pretty error pages for better debugging
-        (new Run())->pushHandler(new PrettyPageHandler())->register();
     }
 
     // Region: Utilities

@@ -8,10 +8,13 @@ use Rose\Contracts\Queue\Job;
 use Rose\Queue\Events\JobFailed;
 use Rose\Queue\Events\JobProcessed;
 use Rose\Queue\Events\JobProcessing;
+use Rose\Support\Traits\WorkerMetricsTrait;
 use Throwable;
 
 class QueueWorker
 {
+    use WorkerMetricsTrait;
+    
     /**
      * The queue manager instance.
      *
@@ -38,12 +41,21 @@ class QueueWorker
      *
      * @param  QueueManager  $manager
      * @param  Container  $container
+     * @param  int  $memoryLimitMB  Memory limit in megabytes
+     * @param  int|null  $maxRuntimeHours  Maximum runtime in hours (null for unlimited)
      * @return void
      */
-    public function __construct(QueueManager $manager, Container $container)
-    {
+    public function __construct(
+        QueueManager $manager, 
+        Container $container, 
+        int $memoryLimitMB = 128, 
+        ?int $maxRuntimeHours = null
+    ) {
         $this->manager = $manager;
         $this->container = $container;
+        
+        // Initialize metrics from the trait
+        $this->initializeMetrics($memoryLimitMB, $maxRuntimeHours);
     }
     
     /**
@@ -80,12 +92,16 @@ class QueueWorker
                 $this->onTaskFailed($event->exception);
             }
         });
+
+        // Every 5 minutes, log health stats
+        $nextHealthCheck = time() + 300;
         
         while (!$this->shouldQuit) {
             // Check for any jobs in the queue
             $jobs = $this->getJobs($connection, $queue, $concurrency);
             
             if (!empty($jobs)) {
+
                 foreach ($jobs as $job) {
                     // Add the job to the pool
                     $pool->add(function () use ($job, $maxTries) {
@@ -95,16 +111,35 @@ class QueueWorker
                 
                 // Run the pool and wait for completion
                 $pool->run()->wait();
+
+                // After processing batch, check health
+                $this->performHealthChecks();
             } else {
                 // No jobs found, sleep for a bit
                 sleep($sleep);
+            }
+
+            // Check if we need to log health metrics
+            if (time() >= $nextHealthCheck) {
+                $this->logHealthMetrics();
+                $nextHealthCheck = time() + 300; // 5 minutes
+            }
+
+            // Perform health checks
+            if ($this->shouldQuitDueToHealth()) {
+                $this->logMessage('warning', "Worker stopping due to health constraint: " . $this->getHealthReason());
+                $this->shouldQuit = true;
+                break;
             }
             
             // Check for quit signal
             $this->checkForQuitSignal();
         }
+
+        $this->logHealthMetrics(true); // Final health log
+        $this->logMessage('info', "Worker stopped");
     }
-    
+
     /**
      * Get a batch of jobs from the queue.
      *
