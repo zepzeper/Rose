@@ -46,21 +46,7 @@ class WorkerCommand extends BaseCommand
         
         $io = $this->io();
         $io->title('Rose Queue Worker');
-        
-        // Output the worker configuration
-        $io->table(
-            ['Option', 'Value'],
-            [
-                ['Connection', $connection ?: 'default (from config)'],
-                ['Queue', $queue],
-                ['Daemon Mode', $daemon ? 'Yes' : 'No'],
-                ['Sleep Duration', $sleep . 's'],
-                ['Max Tries', $tries],
-                ['Max Jobs', $maxJobs > 0 ? $maxJobs : 'Unlimited'],
-                ['Concurrency', $concurrency],
-            ]
-        );
-        
+
         // Check if queue manager is available
         if (!$this->app->bound('queue')) {
             $io->error('Queue manager not available. Make sure QueueServiceProvider is registered.');
@@ -69,6 +55,22 @@ class WorkerCommand extends BaseCommand
         
         // Get the queue manager
         $queueManager = $this->app->make('queue');
+
+        $connection = $this->app->make('config')->get('queue.default');
+        
+        // Output the worker configuration
+        $io->table(
+            ['Option', 'Value'],
+            [
+                ['Connection', $connection . ' (from config)'],
+                ['Queue', $queue],
+                ['Daemon Mode', $daemon ? 'Yes' : 'No'],
+                ['Sleep Duration', $sleep . 's'],
+                ['Max Tries', $tries],
+                ['Max Jobs', $maxJobs > 0 ? $maxJobs : 'Unlimited'],
+                ['Concurrency', $concurrency],
+            ]
+        );
         
         // Get the queue worker instance
         $worker = $this->app->make(QueueWorker::class);
@@ -99,7 +101,7 @@ class WorkerCommand extends BaseCommand
      * Run the worker in daemon mode.
      *
      * @param QueueWorker $worker
-     * @param string|null $connection
+     * @param string $connection
      * @param string $queue
      * @param int $sleep
      * @param int $tries
@@ -108,7 +110,7 @@ class WorkerCommand extends BaseCommand
      */
     protected function runWorkerDaemon(
         QueueWorker $worker,
-        ?string $connection,
+        string $connection,
         string $queue,
         int $sleep,
         int $tries,
@@ -218,14 +220,14 @@ class WorkerCommand extends BaseCommand
             pcntl_async_signals(true);
             
             // Handle SIGTERM and SIGINT signals
-            pcntl_signal(SIGTERM, function ($worker) {
+            pcntl_signal(SIGTERM, function () use($worker) {
                 $this->io()->warning('SIGTERM received, shutting down gracefully...');
                 $worker->stop();
                 $worker->logHealthMetrics(true);
                 exit(0);
             });
             
-            pcntl_signal(SIGINT, function ($worker) {
+            pcntl_signal(SIGINT, function () use ($worker) {
                 $this->io()->warning('SIGINT received, shutting down gracefully...');
                 $worker->stop();
                 $worker->logHealthMetrics(true);

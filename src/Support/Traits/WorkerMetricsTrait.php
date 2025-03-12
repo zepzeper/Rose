@@ -259,7 +259,7 @@ trait WorkerMetricsTrait
      * @param bool $final Whether this is the final health log
      * @return void
      */
-    protected function logHealthMetrics(bool $final = false): void
+    public function logHealthMetrics(bool $final = false): void
     {
         $prefix = $final ? "Final worker health" : "Worker health";
         $this->logMessage('info', "{$prefix}: " . $this->getHealthReport());
@@ -296,8 +296,8 @@ trait WorkerMetricsTrait
     protected function logMessage(string $level, string $message, array $context = []): void
     {
         try {
-            if ($this->container->make('log')) {
-                $logger = $this->container->make('log');
+            if ($this->container->make('logger')) {
+                $logger = $this->container->make('logger');
                 $logger->{$level}("[Queue Worker] {$message}", $context);
             }
         } catch (\Throwable $e) {
