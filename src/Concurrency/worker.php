@@ -16,9 +16,9 @@ ini_set('display_errors', 'stderr');
 
 // Custom error logging function that writes to a file for debugging
 function log_debug($message) {
-    $logDir = sys_get_temp_dir();
+    $logDir = getcwd();
     file_put_contents(
-        $logDir . '/rose_worker_' . getmypid() . '.log',
+        $logDir . '/storage/rose_worker_' . getmypid() . '.log',
         date('[Y-m-d H:i:s] ') . $message . PHP_EOL,
         FILE_APPEND
     );
@@ -119,8 +119,9 @@ if (empty($input)) {
 }
 
 try {
+    log_debug($input);
     // Try to unserialize the input
-    $serializedClosure = @unserialize($input);
+    $serializedClosure = unserialize($input);
     
     if ($serializedClosure === false) {
         throw new Exception('Failed to unserialize closure: ' . substr($input, 0, 100));

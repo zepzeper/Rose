@@ -68,7 +68,8 @@ class Process implements ProcessContract
 
             // Write serialized task to the process
             $serialized = serialize($this->task);
-            fwrite($this->stdin, $serialized . PHP_EOL);
+
+            fwrite($this->stdin, $serialized);
             fclose($this->stdin);
 
             $status = proc_get_status($this->process);

@@ -82,14 +82,14 @@ class QueueWorker
         
         // Register callbacks for the pool
         $pool->whenTaskSucceeded(function ($event) {
+            $this->incrementProcessed();
             if (method_exists($this, 'onTaskSucceeded')) {
-                $this->onTaskSucceeded($event->output);
             }
         });
         
         $pool->whenTaskFailed(function ($event) {
+            $this->incrementFailed();
             if (method_exists($this, 'onTaskFailed')) {
-                $this->onTaskFailed($event->exception);
             }
         });
 
@@ -101,11 +101,10 @@ class QueueWorker
             $jobs = $this->getJobs($connection, $queue, $concurrency);
             
             if (!empty($jobs)) {
-
                 foreach ($jobs as $job) {
                     // Add the job to the pool
                     $pool->add(function () use ($job, $maxTries) {
-                        return $this->processJob($job, $maxTries);
+                        $this->processJob($job, $maxTries);
                     });
                 }
                 
@@ -178,8 +177,6 @@ class QueueWorker
             
             // Process the job
             $result = $job->handle();
-
-            $this->incrementProcessed();
             
             // Delete the job from the queue if it was processed successfully
             $job->delete();
@@ -190,7 +187,6 @@ class QueueWorker
             return $result;
         } catch (Throwable $e) {
             // Handle job failure
-            $this->incrementFailed();
             $this->handleJobFailure($job, $e, $maxTries);
             
             return null;
@@ -259,6 +255,26 @@ class QueueWorker
         if ($this->container->make('events')) {
             $this->container->get('events')->dispatch($event);
         }
+    }
+ 
+    /**
+     * Callback for tasks that fail
+     *
+     * @param Throwable $event
+     * @return void
+     */
+    private function onTaskFailed(Throwable $exception): void
+    {
+    }
+
+    /**
+     * Callback for tasks that succeedes
+     *
+     * @param  string $event
+     * @return void
+     */
+    private function onTaskSucceeded(string $exception): void
+    {
     }
     
     /**
