@@ -19,7 +19,7 @@ class LogTailCommand extends BaseCommand
     {
         $this->setName(self::$defaultName)
              ->setDescription('Tail the application logs')
-             ->addArgument('file', InputArgument::OPTIONAL, 'The log file to tail (without extension)', 'laravel')
+             ->addArgument('file', InputArgument::OPTIONAL, 'The log file to tail (without extension)', 'rose')
              ->addOption('lines', 'l', InputOption::VALUE_OPTIONAL, 'The number of lines to tail', 20)
              ->addOption('follow', 'f', InputOption::VALUE_NONE, 'Continue to follow the logs');
     }

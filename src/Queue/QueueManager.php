@@ -73,27 +73,11 @@ class QueueManager
     protected function registerResolvers(): void
     {
         $this->addResolver('file', function ($config) {
-            return new FileQueueDriver($config['path'] ?? storage_path('queue'));
+            return $this->createFileDriver($config);
         });
         
         $this->addResolver('redis', function ($config) {
-            $redis = new Redis();
-            $redis->connect(
-                $config['host'] ?? '127.0.0.1',
-                $config['port'] ?? 6379
-            );
-            
-            if (isset($config['password']) && !empty($config['password'])) {
-                $redis->auth($config['password']);
-            }
-            
-            if (isset($config['database'])) {
-                $redis->select($config['database']);
-            }
-            
-            $keyPrefix = $config['prefix'] ?? 'queue:';
-            
-            return new RedisQueueDriver($redis, $keyPrefix);
+						return $this->createRedisDriver($config);
         });
     }
     
