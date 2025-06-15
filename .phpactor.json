@@ -1,9 +1,8 @@
 {
     "language_server_worse_reflection.enabled": false,
-    "language_server_diagnostics.enabled": false,
+    "language_server_diagnostics.enabled": true,
     "language_server_psalm.enabled": false,
     "language_server_phpstan.enabled": true,
     "language_server_phpstan.config_path": "phpstan.src.neon.dist",
-    "language_server_worse_reflection.diagnostics.enable": false,
     "language_server_php_cs_fixer.enabled": false
 }

@@ -109,6 +109,7 @@ class LoadConfiguration
     protected function loadConfigurationFile($name, $path, Repository $repo)
     {
         // Load file in isolated scope using closure
+			dd($path);
         $config_content = (fn () => include $path)();
         $repo->set($name, $config_content);
     }

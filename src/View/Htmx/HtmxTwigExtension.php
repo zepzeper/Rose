@@ -15,6 +15,8 @@ class HtmxTwigExtension extends AbstractExtension
     public function getFunctions()
     {
         return [
+						// Twig Code blocks
+						new TwigFunction('highlight_php', [HtmxMacroSyntaxHighlighter::class, 'highlight'], ['is_safe' => ['html']]),
             // Attribute helpers
             new TwigFunction('htmx_attrs', [$this, 'renderAttributes'], ['is_safe' => ['html']]),
             
