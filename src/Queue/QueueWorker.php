@@ -150,7 +150,7 @@ class QueueWorker
         
         for ($i = 0; $i < $count; $i++) {
             $job = $this->manager->connection($connection)->pop($queue);
-            
+
             if ($job) {
                 $jobs[] = $job;
             } else {

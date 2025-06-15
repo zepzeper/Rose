@@ -203,9 +203,11 @@ class WorkerCommand extends BaseCommand
                 $failures,
                 $failures === 1 ? '' : 's'
             ));
-        } else {
-            $io->warning('No jobs were processed.');
-        }
+        } else if ($processed == 0 && $count > 0){
+            $io->warning('Jobs in queue are delayed.');
+				} else {
+            $io->warning('No jobs processed.');
+				}
     }
     
     /**

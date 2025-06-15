@@ -111,12 +111,18 @@ class FileQueueDriver implements QueueDriver
         // Get the first job file
         $jobFile = $files[0];
         $jobId = basename($jobFile, '.job');
+
+				if (@file_get_contents($queuePath . '/delayed/' . $jobId) > time()) {
+					// Delayed job
+					return null;
+				}
         
         // Read and delete the job file
         $payload = $this->readAndDeleteJobFile($jobFile);
         if ($payload === null) {
             return null;
         }
+
         
         // Create a job instance
         $job = $payload['job'];
@@ -290,7 +296,7 @@ class FileQueueDriver implements QueueDriver
     {
         $this->ensureQueueDirectoryExists($queue);
         $this->moveExpiredDelayedJobs($queue);
-        
+
         $queuePath = $this->getQueuePath($queue);
         $files = glob($queuePath . '/*.job');
         
