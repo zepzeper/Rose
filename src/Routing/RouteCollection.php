@@ -235,7 +235,7 @@ class RouteCollection
      */
     protected function generateRouteIdentifier(Route $route): string
     {
-        return md5(implode('|', $route->getMethods()) . $route->getUri());
+        return md5(implode('|', $route->getMethods()) . $route->getUri() . $route->getController());
     }
 
     /**

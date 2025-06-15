@@ -128,7 +128,7 @@ class Route implements RouteContract
         $this->name = $name;
         
         // Generate a unique identifier for route tracking
-        $identifier = md5(implode('|', $this->methods) . $this->uri);
+        $identifier = md5(implode('|', $this->methods) . $this->uri . $this->controller);
         
         // If route is in a collection, update the named routes registry
         if (isset($this->collection)) {
